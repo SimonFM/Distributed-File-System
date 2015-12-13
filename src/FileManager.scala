@@ -11,12 +11,16 @@ class FileManager {
   def writeToFile(fileName: String, toBeAdded:String): Unit = {
     val file = new File(fileName)
 
-    if(!file.exists()) file.createNewFile()
+    if(!file.exists()) {
+      file.createNewFile()
+      filePaths = fileName :: filePaths
+      println("Added "+fileName + " to file paths")
+    }
 
     val writer = new PrintWriter(file)
     writer.write(toBeAdded)
     writer.close()
-    filePaths = fileName :: filePaths
+
   }
 
   def getFileContents(fileName: String): String ={
@@ -33,5 +37,13 @@ class FileManager {
 
   def containsFile(fileName: String) : Boolean ={
     return filePaths.contains(fileName)
+  }
+
+
+  def lsCommand(): List[String] ={
+    for(f <- filePaths){
+      println("Inside FM"+f)
+    }
+    return filePaths
   }
 }

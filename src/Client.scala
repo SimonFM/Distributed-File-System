@@ -14,13 +14,16 @@ object Client {
       while(true) {
 
 
-        val message = readLine("Please enter message: ")
         val socket = new Socket(host, port)
         val outputStream = socket.getOutputStream()
         lazy val in = new BufferedSource(socket.getInputStream()).getLines()
         val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
-        out.println(message)
-        out.flush() // send the request to the server
+        while(true){
+          val message = readLine("Please enter message: ")
+          out.println(message)
+          out.flush() // send the request to the server
+        }
+
 
         socket.close()
         println("Socket Closed!")
