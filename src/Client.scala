@@ -11,23 +11,29 @@ object Client {
 
   def run(): Unit ={
     try{
-      while(true) {
+
 
 
         val socket = new Socket(host, port)
         val outputStream = socket.getOutputStream()
         lazy val in = new BufferedSource(socket.getInputStream()).getLines()
         val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
-        while(true){
-          val message = readLine("Please enter message: ")
-          out.println(message)
-          out.flush() // send the request to the server
-        }
+
+//          val message = readLine("Please enter message: ")
+        out.println("FILE_WRITE test.txt hello")
+        out.flush() // send the request to the server
+        readLine()
+        out.println("FILE_READ test.txt")
+        out.flush() // send the request to the server
+        readLine()
+        out.println("LS")
+        out.flush() // send the request to the server
+
 
 
         socket.close()
         println("Socket Closed!")
-      }
+
     }catch{
       case notConnected : java.net.ConnectException =>
         println("Can't connect to: "+host+" on port: "+port)

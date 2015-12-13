@@ -13,7 +13,6 @@ class FileManager {
 
     if(!file.exists()) {
       file.createNewFile()
-      filePaths = fileName :: filePaths
       println("Added "+fileName + " to file paths")
     }
 
@@ -21,11 +20,14 @@ class FileManager {
     writer.write(toBeAdded)
     writer.close()
 
+    if(!filePaths.contains(fileName))
+      filePaths = fileName :: filePaths
+
   }
 
   def getFileContents(fileName: String): String ={
     val file = new File(fileName)
-    var result = "nope"
+    var result = ""
     if(!file.exists()) {
       println("Sorry '"+ fileName+"' could not be found")
       return null

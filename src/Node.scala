@@ -12,7 +12,7 @@ object Node {
     var NUMBER_OF_THREADS = 20
     // Maximum number of threads.
     val serverSocket = new ServerSocket(portNumber) // setting up the server
-
+    var port = portNumber
     println("Node running on port number: " + portNumber)
     // display to console
     val threadPool = Executors.newFixedThreadPool(NUMBER_OF_THREADS) // create the thread pool
@@ -97,7 +97,9 @@ object Node {
         val split = recv.split(" ")
         val contents = fileManager.getFileContents(split(1))
         val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "UTF-8")))
+        println("File Contents: " + contents)
         out.println(contents)
+        out.println("READ")
         out.flush()
         println("Sent Back File Contents")
       }
@@ -122,8 +124,8 @@ object Node {
           out.flush()
           println("Sent Back Nope LS")
         } else {
-          out.println("LS")
           out.println(results)
+          out.println("LS")
           out.flush()
           println("Sent Back LS")
         }

@@ -118,16 +118,20 @@ object DirectoryServer {
       def handleFILE_READ(): Unit ={
         // connect to the node with the file
         val nodeSocket = new Socket("localhost",8080)
-        val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream(), "UTF-8")))
+        val nodeInput = nodeSocket.getInputStream
+        val nodeOutput = nodeSocket.getOutputStream
+        val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeOutput, "UTF-8")))
+        val nodeInStream = new InputStreamReader(nodeInput)
+        lazy val nodeIn = new BufferedReader(nodeInStream)
         nodeOut.println(recv)
         nodeOut.flush()
 
         // Handles the files being written back
         var contents = ""
-        while(nodeSocket.getInputStream().available() > 0){
-          recv = in.readLine()
-          contents = contents + recv
+        while(!contents.contains("READ")) {
+          contents += nodeIn.readLine() + "\n"
         }
+        println("Recieved: " + contents)
         val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8")))
         out.println(contents)
         out.flush()
@@ -147,11 +151,6 @@ object DirectoryServer {
         var contents = ""
         while(!contents.contains("LS")) {
           contents += nodeIn.readLine() + "\n"
-        }
-        // Handles the messages being sent back
-        while(nodeInput.available() > 0 ){
-          recv = nodeIn.readLine()
-          contents = contents + recv
         }
         println("LS Contents: " +  contents)
         val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8")))
