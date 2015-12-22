@@ -15,3 +15,11 @@ Features I chose to implement were:
 
 
 The Directory Server is connected to all the other NodeServers (who store all the files) and the client interacts with the Directory Server. So the Directory Server acts much like a proxy for the client, giving it the results it wants.
+
+API Commands:
+
+GET_FILE test.txt -- Tested works
+WRITE_FILE test.txt newThings-To-say -- Tested works
+
+// #JustDirectoryThings
+LS -- Test works
