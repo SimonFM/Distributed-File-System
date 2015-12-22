@@ -7,21 +7,24 @@ import scala.io.Source
  */
 class FileManager {
   var filePaths : List[String]  = List()
-
+  var maxSize = 100
   def writeToFile(fileName: String, toBeAdded:String): Unit = {
-    val file = new File(fileName)
+    if(maxSize >= filePaths.size){
+      val file = new File(fileName)
+      println("To Add "+fileName)
+      if(!file.exists()) {
+        file.createNewFile()
+        println("Added "+fileName + " to file paths")
+      }
 
-    if(!file.exists()) {
-      file.createNewFile()
-      println("Added "+fileName + " to file paths")
+      val writer = new PrintWriter(file)
+      writer.write(toBeAdded)
+      writer.close()
+
+      if(!filePaths.contains(fileName))
+        filePaths = fileName :: filePaths
     }
-
-    val writer = new PrintWriter(file)
-    writer.write(toBeAdded)
-    writer.close()
-
-    if(!filePaths.contains(fileName))
-      filePaths = fileName :: filePaths
+    else println("File System is full")
 
   }
 

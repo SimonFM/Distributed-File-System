@@ -11,26 +11,29 @@ object Client {
 
   def run(): Unit ={
     try{
-
-
-
         val socket = new Socket(host, port)
         val outputStream = socket.getOutputStream()
         lazy val in = new BufferedSource(socket.getInputStream()).getLines()
         val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
 
-//          val message = readLine("Please enter message: ")
+        println("Wrote to Files")
         out.println("FILE_WRITE test.txt hello")
         out.flush() // send the request to the server
-        readLine()
-        out.println("FILE_READ test.txt")
+        out.println("FILE_WRITE test2.txt hi")
         out.flush() // send the request to the server
         readLine()
+        println("Read Files")
+        out.println("FILE_READ test.txt")
+        out.flush() // send the request to the server
+        out.println("FILE_READ test2.txt")
+        out.flush() // send the request to the server
+        readLine()
+        println("LS")
         out.println("LS")
         out.flush() // send the request to the server
 
 
-
+        readLine()
         socket.close()
         println("Socket Closed!")
 

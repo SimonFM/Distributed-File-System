@@ -1,6 +1,6 @@
 /**
  * Created by Simon on 05/12/2015.
- * Based off my previous lab
+ * Based off my previous labs
  */
 import java.io._
 import java.net._
@@ -13,6 +13,11 @@ object DirectoryServer {
   var id = 0
   val numberOfNodes = 3
   val host = "localhost"
+
+  var portsToFile : Map[String,Int] = Map()
+
+  val cache = new FileManager()
+  cache.maxSize = 10
   /**
    * This is a simple server class to represent a multi threaded server.
    * It contains both a Server and a Worker class. The worker doing all the
@@ -30,8 +35,6 @@ object DirectoryServer {
 
     var sockets: List[Socket] = List()
     var noKill = true
-    // Empty hash table whose keys are strings and values are integers:
-    var A:Map[String,Int] = Map()
 
     /**
      * This is the run method of the server, it is needed as I have extended my server
@@ -115,49 +118,85 @@ object DirectoryServer {
         }
       }
 
+      def checkCacheREAD(filename : String): Boolean={
+        if(!cache.containsFile(filename)) return false
+
+        val contents = cache.getFileContents(filename)
+        val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "UTF-8")))
+
+        out.println(contents)
+        out.println("READ")
+        out.flush()
+
+        return true
+      }
+
+      def checkCacheWRITE(filename : String, contents : String): Unit={
+        if(!cache.containsFile(filename)) println("Not in cache")
+        else{
+          cache.writeToFile(filename,contents)
+          val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "UTF-8")))
+
+          out.println(contents)
+          out.println("READ")
+          out.flush()
+        }
+
+      }
+
       def handleFILE_READ(): Unit ={
         // connect to the node with the file
-        val nodeSocket = new Socket("localhost",8080)
-        val nodeInput = nodeSocket.getInputStream
-        val nodeOutput = nodeSocket.getOutputStream
-        val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeOutput, "UTF-8")))
-        val nodeInStream = new InputStreamReader(nodeInput)
-        lazy val nodeIn = new BufferedReader(nodeInStream)
-        nodeOut.println(recv)
-        nodeOut.flush()
+        val split = recv.split(" ")
+        val fileNameKey = split(1)
 
-        // Handles the files being written back
-        var contents = ""
-        while(!contents.contains("READ")) {
-          contents += nodeIn.readLine() + "\n"
+        var temp = 0
+        if(checkCacheREAD(fileNameKey)){
+          println("Cache Hit" + fileNameKey)
+          println("Fetched from Cache")
         }
-        println("Recieved: " + contents)
-        val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8")))
-        out.println(contents)
-        out.flush()
+        else{
+          if(!portsToFile.contains(fileNameKey)) {
+            val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8")))
+            out.println("No Such File")
+            out.flush()
+          }
+          else{
+            var contents = ""
+            val nodeSocket = new Socket("localhost",portsToFile(fileNameKey))
+            val nodeInput = nodeSocket.getInputStream
+            val nodeOutput = nodeSocket.getOutputStream
+            val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeOutput, "UTF-8")))
+            val nodeInStream = new InputStreamReader(nodeInput)
+            lazy val nodeIn = new BufferedReader(nodeInStream)
+
+            nodeOut.println(recv)
+            nodeOut.flush()
+
+            val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8")))
+
+            while(!contents.contains("READ")) {
+              contents += nodeIn.readLine() + "\n"
+            }
+            println("Recieved: " + contents)
+            out.println(contents)
+            out.flush()
+          }
+        }
       }
 
       def handleLS(): Unit ={
         // connect to the node with the file
-        val nodeSocket = new Socket("localhost",8080)
-        val nodeInput = nodeSocket.getInputStream
-        val nodeOutput = nodeSocket.getOutputStream
-        val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeOutput, "UTF-8")))
-        val nodeInStream = new InputStreamReader(nodeInput)
-        lazy val nodeIn = new BufferedReader(nodeInStream)
-        nodeOut.println(recv)
-        nodeOut.flush()
-        var messagesBack = false
-        var contents = ""
-        while(!contents.contains("LS")) {
-          contents += nodeIn.readLine() + "\n"
-        }
-        println("LS Contents: " +  contents)
-        val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8")))
-        out.println(contents)
-        out.flush()
-        println("Sent the user back the Files")
+        val temp = 0
+        val split = recv.split(" ")
 
+        val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8")))
+
+        portsToFile.keys.foreach{
+          key => out.println(key)
+               out.flush()
+               println(key)
+        }
+        println("Sent the user back the Files from LS")
       }
 
       def handleFILE_GET(): Unit ={
@@ -165,11 +204,29 @@ object DirectoryServer {
       }
 
       def handleFILE_WRITE(): Unit ={
-        val nodeSocket = new Socket("localhost",8080)
+        val split = recv.split(" ")
+        val fileNameKey = split(1)
+        var temp = 0
+        if(!portsToFile.contains(fileNameKey)){
+          if(ports >= 8082){
+            ports = 8080
+            temp = ports
+          }
+          else{
+            temp = ports
+            ports = ports + 1
+          }
+          val tempMap : Map[String,Int]  =  Map(fileNameKey -> temp)
+          portsToFile = portsToFile ++ tempMap
+          println("Its a new file")
+
+        }
+        val nodeSocket = new Socket("localhost",portsToFile(fileNameKey))
         val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream(), "UTF-8")))
         nodeOut.println(recv)
         nodeOut.flush()
         println("Told Node to write")
+        cache.writeToFile(split(1),split(2))
       }
 
       // handles the killing of the server
