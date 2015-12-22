@@ -16,21 +16,32 @@ object Client {
         lazy val in = new BufferedSource(socket.getInputStream()).getLines()
         val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
 
+        // begin the first test
         println("Wrote to Files")
         out.println("FILE_WRITE test.txt hello")
         out.flush() // send the request to the server
-        out.println("FILE_WRITE test2.txt hi")
+        readLine() // wait for input to begin next test
+        out.println("WRITE_FILE test.txt newThings-To-say")
         out.flush() // send the request to the server
-        readLine()
-        println("Read Files")
-        out.println("FILE_READ test.txt")
-        out.flush() // send the request to the server
-        out.println("FILE_READ test2.txt")
-        out.flush() // send the request to the server
-        readLine()
-        println("LS")
-        out.println("LS")
-        out.flush() // send the request to the server
+        //out.println("FILE_WRITE test2.txt hi")
+        //.flush() // send the request to the server
+
+
+        readLine() // wait for input to begin next test
+        println("Getting Files")
+        out.println("GET_FILE test.txt")
+        out.flush() // send the request to the
+//        println("Read Files")
+//        out.println("FILE_READ test.txt")
+//        out.flush() // send the request to the server
+//        out.println("FILE_READ test2.txt")
+//        out.flush() // send the request to the server
+//
+//
+//        readLine() // wait for input to begin next test
+//        println("LS")
+//        out.println("LS")
+//        out.flush() // send the request to the server
 
 
         readLine()

@@ -1,6 +1,0 @@
-FILE_GET test.txt
-FILE_READ test.txt
-FILE_WRITE test.txt hello
-
-// Directory things
-LS

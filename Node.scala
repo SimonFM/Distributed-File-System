@@ -35,14 +35,14 @@ object Node {
         while (!serverSocket.isClosed && noKill) {
           try {
             sockets = serverSocket.accept() :: sockets
-            if (!sockets.isEmpty) {
+            if (sockets.nonEmpty) {
               println("New Client requested to connect")
               threadPool.execute(new NodeWorker(sockets.head)) // allocate a new Worker a Socket
             }
             else println("Empty socket list")
           } catch {
             case socketE: SocketException =>
-              serverSocket.close
+              serverSocket.close()
               println("Sorry, the server isn't running")
           }
         }
@@ -54,7 +54,7 @@ object Node {
 
     class NodeWorker(socket: Socket) extends Runnable {
       // generic socket set up. ( used from the last lab)
-      val outputStream = socket.getOutputStream()
+      val outputStream = socket.getOutputStream
       val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
       val inStream = new InputStreamReader(socket.getInputStream)
       lazy val in = new BufferedReader(inStream)
@@ -74,18 +74,18 @@ object Node {
         try {
           // if there is another message, get it.
           while (!socket.isClosed) {
-            if (socket.getInputStream().available() > 0) {
+            if (socket.getInputStream.available() > 0) {
               println("Waiting.... ")
               recv = in.readLine()
               println("Received: " + recv)
-              if (recv .contains("FILE_READ ")) handleFILE_READ
-              else if (recv .contains("FILE_GET ")) handleFILE_GET
-              else if (recv .contains("LS")) handleLS
-              else if (recv .contains("FILE_WRITE ")) handleFILE_WRITE
+              if (recv .contains("FILE_READ ")) handleFILE_READ()
+              else if (recv .contains("FILE_GET ")) handleFILE_GET()
+              else if (recv .contains("FILE_WRITE ")) handleFILE_WRITE()
+              else if (recv .contains("WRITE_FILE ")) handleWRITE_FILE()
+              else if (recv .contains("GET_FILE ")) handleGET_FILE()
+              else if (recv .contains("LS")) handleLS()
               else if (recv == "") print("Nothing")
-              else {
-
-              }
+              else {}
             } //if
           } // end of while
         } catch {
@@ -108,15 +108,74 @@ object Node {
         val split = recv.split(" ")
         fileManager.writeToFile(split(1), split(2))
       }
+      def handleWRITE_FILE(): Unit = {
+        val split = recv.split(" ")
+        val fName = split(1)
+        val toBeWritten = split(2)
+        val out = socket.getOutputStream
+        if(!fileManager.isFileBeingWrittenTo(fName)){
+          val bytesToBeWritten = toBeWritten.getBytes
+          val file = fileManager.getFile(fName)
+          if(file != null){
+            val fStream = new FileOutputStream(fName)
+            fStream.write(bytesToBeWritten)
+            fStream.close()
+            println("File"+ fName +" overwritten with " + toBeWritten )
+          }
 
+        }
+        else{
+          val err = "Someone else in using that file"
+          out.write(err.getBytes, 0, err.length)
+          out.flush()
+          out.close()
+        }
+      }
+      // Gets the contents of a file
+      def handleGET_FILE(): Unit = {
+        val split = recv.split(" ")
+        val out = socket.getOutputStream
+        if(!fileManager.isFileBeingWrittenTo(split(1))){
+          val theFile = fileManager.getFile(split(1))
+          val fileInput = new FileInputStream(theFile)
+          println("Got a File Request " + split(1))
+
+          val contents = new Array[Byte](theFile.length().toInt)
+
+          fileInput.read(contents)
+
+          val len = contents.length
+          val start = 0
+          if (len < 0) throw new IllegalArgumentException("Negative length not allowed")
+          if (start < 0 || start >= contents.length)
+            throw new IndexOutOfBoundsException("Out of bounds: " + start)
+          // Other checks if needed.
+
+          if (len > 0){
+            out.write(len)
+            out.flush()
+            out.write(contents)
+            out.flush()
+            out.close()
+            println("Sent back File")
+          }
+        }
+        else{
+          out.write(-99)
+          out.flush()
+          out.close()
+          println("Sent The Error")
+        }
+      }
+
+      // performs LS in the Node
       def handleLS(): Unit ={
         val contents = fileManager.lsCommand()
         var results = ""
         val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "UTF-8")))
 
-        for(file <- contents){
-          results = results + file + "\n"
-        }
+        for(file <- contents) results = results + file + "\n"
+
         println(results)
         if(results == "") {
           out.println("Nope nothing :(")
@@ -131,19 +190,27 @@ object Node {
         }
       }
 
+      // Handles writes (in th form of strings) to a file
       def handleFILE_WRITE(): Unit = {
         val split = recv.split(" ")
-        fileManager.writeToFile(split(1),split(2))
-        val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "UTF-8")))
-        out.println("Written To File: "+ split(1))
-        out.flush()
-        println("Written To File: "+ split(1))
+        if(fileManager.writeToFile(split(1),split(2))){
+          val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "UTF-8")))
+          out.println("Written To File: "+ split(1))
+          out.flush()
+          println("Written To File: "+ split(1))
+        }
+        else{
+          out.println("Someone else has control of the file: "+ split(1))
+          out.flush()
+          println("Someone else has control of the file: "+ split(1))
+        }
+
       }
 
       // prints a message to all sockets
       def handleMessage(message: String): Unit = {
         for (s <- sockets) {
-          val outputStream = s.getOutputStream()
+          val outputStream = s.getOutputStream
           val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
           out.println(message)
           out.flush()
@@ -157,7 +224,7 @@ object Node {
             noKill = false
             handleMessage("KILL_SERVICE")
             threadPool.shutdownNow
-            serverSocket.close
+            serverSocket.close()
           }
         } catch {
           case e: SocketException => println("Server shut down")
@@ -184,8 +251,8 @@ object Node {
   }
   // Main method that runs the program
   def main(args: Array[String]) {
-    val input = readLine("Please Enter in the port to start on: ")
-    new NodeServer(input.toInt).run()
+    //val input = readLine("Please Enter in the port to start on: ")
+    new NodeServer(8080).run()
   }
 
 }

@@ -1,0 +1,20 @@
+// Test Reading and Writing (string)
+// #JustStringThings
+FILE_GET test.txt // tested works
+FILE_READ test.txt // tested works
+FILE_WRITE test.txt hello // tested works
+
+
+// Test Reading and Writing (byte)
+// #JustByteThings
+GET_FILE test.txt -- Tested works
+WRITE_FILE test.txt newThings-To-say -- Tested works
+
+// #JustDirectoryThings
+LS -- Test works
+
+TODO
+WRITE_SNOW_MAN -- writes a unicode snowman in all the files.
+CACHES (with bytes)
+LOCK SERVICE
+DIRECTORY SERVICE ( its kinda done )
