@@ -4,15 +4,15 @@ A distributed File System written in Scala.
 Features I chose to implement were:
 
 1. File System
-- READ
-- WRITE
-- DELETE
+ READ
+  - WRITE
+  - DELETE
 2. Directory Service 
-- Tells the client which node the file is located on
+  - Tells the client which node the file is located on
 3. Locking System
-- If a user has accessed a file it is locked to them, they must release the lock themeselves
+  - If a user has accessed a file it is locked to them, they must release the lock themeselves
 4. Caching
-- *Done in the Directory Service
+  - *Done in the Directory Service
 
 
 The Directory Server is connected to all the other NodeServers (who store all the files) and the client interacts with the Directory Server. So the Directory Server acts much like a proxy for the client, giving it the results it wants.
