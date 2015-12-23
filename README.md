@@ -18,7 +18,7 @@ Features I chose to implement were:
 The Directory Server is connected to all the other NodeServers (who store all the files) and the client interacts with the Directory Server. So the Directory Server acts much like a proxy for the client, giving it the results it wants.
 
 ##API Commands:
-### DELETES 
+### Delete a file
 ```Javascript
 DELETE_FILE:
 FILE_NAME:--test.txt
@@ -26,7 +26,7 @@ END;
 ```
 ---
 
-### WRITES 
+### Write to a file
 ```javascript
 WRITE_FILE:\n
 FILE_NAME:--test.txt\n
@@ -41,7 +41,7 @@ END
 ```
 ---
 
-###READS
+###Read the contents of a file
 ```javascript
 -- Tested works
 GET_FILE:\n
@@ -55,7 +55,7 @@ END;
 ```
 ---
 
-###RELEASE LOCK ON FILE
+###Release lock on a file
 ```javascript
 RELEASE:
 FILENAME:--filename.txt
@@ -66,7 +66,7 @@ NOPE;
 ```
 ---
 
-###DIRECTORY
+###Search for File
 ```javascript
 To Proxy / Node
 SEARCH:
