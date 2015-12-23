@@ -14,7 +14,7 @@ Features I chose to implement were:
 4. Caching
   - Done in the DirectoryServer
   - Stores the last 10 files used in the system.
-  - If it exceeds that amount, then the one file is removed from the list
+  - If it exceeds that amount, then the file is removed from the list
 
 
 The Directory Server is connected to all the other NodeServers (who store all the files) and the client interacts with the Directory Server. So the Directory Server acts much like a proxy for the client, giving it the results it wants.
