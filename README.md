@@ -24,6 +24,7 @@ DELETE_FILE:
 FILE_NAME:--test.txt
 END;
 ```
+---
 
 ### WRITES 
 ```javascript
@@ -38,6 +39,7 @@ FAILURE -- error occured
 SAVED: fileName
 END
 ```
+---
 
 ###READS
 ```javascript
@@ -51,6 +53,7 @@ FILE_CONTENTS:\n
 CONTENTS: <contents>\n
 END;
 ```
+---
 
 ###RELEASE
 ```javascript
@@ -61,6 +64,7 @@ END;
 SUCCESS;
 NOPE;
 ```
+---
 
 ###DIRECTORY
 ```javascript
@@ -69,9 +73,10 @@ SEARCH:
 FILENAME:--test.txt
 END;
 
+
 From Node / to Client:
 SEARCH:
 FILEPATH:--NameOfServer:test.txt
 END;
 ```
-
+---
