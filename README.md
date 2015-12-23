@@ -27,7 +27,7 @@ END;
 
 ### WRITES 
 ```javascript
-RITE_FILE:\n
+WRITE_FILE:\n
 FILE_NAME:--test.txt\n
 CONTENTS:--'newThings To say'\n
 END;
