@@ -18,10 +18,31 @@ The Directory Server is connected to all the other NodeServers (who store all th
 
 API Commands:
 
-// #JustFileSystemThings
-GET_FILE test.txt -- Tested works
+##########
+# READS #
+##########
+-- Tested works
+GET_FILE:\n
+FILE_NAME:--test.txt\n
+END;
 
-WRITE_FILE test.txt newThings-To-say -- Tested works
+--Transferring file data
+FILE_CONTENTS:\n
+CONTENTS: <contents>\n
+END;
+##########
+# WRITES #
+##########
+-- Tested works
+WRITE_FILE:\n
+FILE_NAME:--test.txt\n
+CONTENTS:--'newThings To say'\n
+END;
+
+SUCCESS -- Sent back
+FAILURE -- error occured
+
+
 
 
 // #JustDirectoryThings
