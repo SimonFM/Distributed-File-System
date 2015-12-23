@@ -17,7 +17,7 @@ Features I chose to implement were:
 
 The Directory Server is connected to all the other NodeServers (who store all the files) and the client interacts with the Directory Server. So the Directory Server acts much like a proxy for the client, giving it the results it wants.
 
-API Commands:
+##API Commands:
 ### DELETES 
 ```Javascript
 DELETE_FILE:
