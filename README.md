@@ -1,6 +1,7 @@
-# Distributed-File-System
+# Distributed File System
 A distributed File System written in Scala.
 
+##Infomation about it
 Features I chose to implement were:
 
 1. File System
