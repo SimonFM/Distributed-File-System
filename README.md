@@ -4,7 +4,7 @@ A distributed File System written in Scala.
 Features I chose to implement were:
 
 1. File System
- READ
+  - READ
   - WRITE
   - DELETE
 2. Directory Service 
