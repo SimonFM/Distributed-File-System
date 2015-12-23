@@ -22,24 +22,34 @@ API Commands:
 # READS #
 ##########
 -- Tested works
+
 GET_FILE:\n
+
 FILE_NAME:--test.txt\n
+
 END;
 
 --Transferring file data
 FILE_CONTENTS:\n
+
 CONTENTS: <contents>\n
+
 END;
 ##########
 # WRITES #
 ##########
 -- Tested works
+
 WRITE_FILE:\n
+
 FILE_NAME:--test.txt\n
+
 CONTENTS:--'newThings To say'\n
+
 END;
 
 SUCCESS -- Sent back
+
 FAILURE -- error occured
 
 
