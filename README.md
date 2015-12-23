@@ -55,7 +55,7 @@ END;
 ```
 ---
 
-###RELEASE
+###RELEASE LOCK ON FILE
 ```javascript
 RELEASE:
 FILENAME:--filename.txt
