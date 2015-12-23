@@ -18,19 +18,29 @@ object Client {
 
         // begin the first test
         println("Wrote to Files")
-        out.println("FILE_WRITE test.txt hello")
+        out.println("WRITE_FILE:")
+        out.println("FILE_NAME:--test.txt")
+        out.println("CONTENTS:--newThings To say")
+        out.println("END;")
         out.flush() // send the request to the server
         readLine() // wait for input to begin next test
-        out.println("WRITE_FILE test.txt newThings-To-say")
-        out.flush() // send the request to the server
+       // out.println("WRITE_FILE test.txt newThings-To-say")
+       // out.flush() // send the request to the server
         //out.println("FILE_WRITE test2.txt hi")
         //.flush() // send the request to the server
-
-
-        readLine() // wait for input to begin next test
+//        println("Releasing Access")
+//        out.println("RELEASE:")
+//        out.println("FILENAME:--test.txt")
+//        out.println("END;")
+//        out.flush() // send the request to the server
+//
+//        readLine() // wait for input to begin next test
         println("Getting Files")
-        out.println("GET_FILE test.txt")
+        out.println("GET_FILE:")
+        out.println("FILE_NAME:--test.txt")
+        out.println("END;")
         out.flush() // send the request to the
+
 //        println("Read Files")
 //        out.println("FILE_READ test.txt")
 //        out.flush() // send the request to the server

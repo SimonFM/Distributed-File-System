@@ -55,9 +55,9 @@ object Node {
     class NodeWorker(socket: Socket) extends Runnable {
       // generic socket set up. ( used from the last lab)
       val outputStream = socket.getOutputStream
-      val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
+      val outVal = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
       val inStream = new InputStreamReader(socket.getInputStream)
-      lazy val in = new BufferedReader(inStream)
+      lazy val inVal = new BufferedReader(inStream)
       var recv = ""
       // variable to store messages.
       var count = 0
@@ -76,16 +76,16 @@ object Node {
           while (!socket.isClosed) {
             if (socket.getInputStream.available() > 0) {
               println("Waiting.... ")
-              recv = in.readLine()
+              recv = inVal.readLine()
               println("Received: " + recv)
               if (recv .contains("FILE_READ ")) handleFILE_READ()
-              else if (recv .contains("FILE_GET ")) handleFILE_GET()
-              else if (recv .contains("FILE_WRITE ")) handleFILE_WRITE()
-              else if (recv .contains("WRITE_FILE ")) handleWRITE_FILE()
-              else if (recv .contains("GET_FILE ")) handleGET_FILE()
+             // else if (recv .contains("FILE_GET ")) handleFILE_GET()
+             // else if (recv .contains("FILE_WRITE ")) handleFILE_WRITE()
+              else if (recv == "WRITE_FILE:") handleWRITE_FILE()
+              else if (recv == "GET_FILE:") handleGET_FILE()
               else if (recv .contains("LS")) handleLS()
               else if (recv == "") print("Nothing")
-              else {}
+              else {println("Hello")}
             } //if
           } // end of while
         } catch {
@@ -109,61 +109,89 @@ object Node {
         fileManager.writeToFile(split(1), split(2))
       }
       def handleWRITE_FILE(): Unit = {
+
         val split = recv.split(" ")
-        val fName = split(1)
-        val toBeWritten = split(2)
-        val out = socket.getOutputStream
-        if(!fileManager.isFileBeingWrittenTo(fName)){
-          val bytesToBeWritten = toBeWritten.getBytes
-          val file = fileManager.getFile(fName)
+        var temp = inVal.readLine()
+        println("Hello0")
+
+        var temp1 = temp.split("--")
+        val fileName = temp1(1)
+
+        //get the contents
+        temp = inVal.readLine()
+        println("Hello1")
+
+        temp1 = temp.split("--")
+        val contents = temp1(1)
+
+        // this should be END;
+        temp = inVal.readLine()
+        println("Hello3")
+
+        //val split = recv.split(" ")
+        //val fName = split(1)
+        //val toBeWritten = split(2)
+        val output = socket.getOutputStream
+        if(!fileManager.isFileBeingWrittenTo(fileName)){
+          val bytesToBeWritten = contents.getBytes
+          val file = fileManager.getFile(fileName)
           if(file != null){
-            val fStream = new FileOutputStream(fName)
+            val fStream = new FileOutputStream(fileName)
             fStream.write(bytesToBeWritten)
             fStream.close()
-            println("File"+ fName +" overwritten with " + toBeWritten )
+
+            outVal.println("SUCCESS;")
+            outVal.flush()
+            println("Sent SUCCESS;")
+            fileManager.releaseFile(fileName)
+          }
+          else{
+            outVal.println("FAILURE;")
+            outVal.flush()
+            println("FAILURE;" )
           }
 
         }
         else{
-          val err = "Someone else in using that file"
-          out.write(err.getBytes, 0, err.length)
-          out.flush()
-          out.close()
+          outVal.println("Someone else in using that file")
+          outVal.flush()
         }
       }
+
       // Gets the contents of a file
       def handleGET_FILE(): Unit = {
+
+
+
         val split = recv.split(" ")
-        val out = socket.getOutputStream
-        if(!fileManager.isFileBeingWrittenTo(split(1))){
-          val theFile = fileManager.getFile(split(1))
+        var temp = inVal.readLine()
+        var temp1 = temp.split("--")
+        val fileName = temp1(1)
+        println(temp)
+
+        // this should be END;
+        temp = inVal.readLine()
+        println(temp)
+
+        if(!fileManager.isFileBeingWrittenTo(fileName)){
+          val theFile = fileManager.getFile(fileName)
           val fileInput = new FileInputStream(theFile)
-          println("Got a File Request " + split(1))
+          println("Got a File Request " + fileName)
 
           val contents = new Array[Byte](theFile.length().toInt)
 
           fileInput.read(contents)
+          val toSendBack = new String(contents)
+          outVal.println("FILE_CONTENTS:")
+          outVal.println("CONTENTS:" + toSendBack)
+          outVal.println("END;")
+          outVal.flush()
+          println("Sent back File")
 
-          val len = contents.length
-          val start = 0
-          if (len < 0) throw new IllegalArgumentException("Negative length not allowed")
-          if (start < 0 || start >= contents.length)
-            throw new IndexOutOfBoundsException("Out of bounds: " + start)
-          // Other checks if needed.
-
-          if (len > 0){
-            out.write(len)
-            out.flush()
-            out.write(contents)
-            out.flush()
-            out.close()
-            println("Sent back File")
-          }
         }
         else{
-          out.write(-99)
-          out.flush()
-          out.close()
+          outVal.println("ERROR - 99")
+          outVal.flush()
           println("Sent The Error")
         }
       }
@@ -200,8 +228,8 @@ object Node {
           println("Written To File: "+ split(1))
         }
         else{
-          out.println("Someone else has control of the file: "+ split(1))
-          out.flush()
+          outVal.println("Someone else has control of the file: "+ split(1))
+          outVal.flush()
           println("Someone else has control of the file: "+ split(1))
         }
 

@@ -58,11 +58,17 @@ class FileManager {
   // Returns the actual file and not the contents
   def getFile(fileName : String): File ={
     val file = new File(fileName)
-    if( file.exists() && !currentFileAccess.contains(fileName) ){
+    if(!file.exists()){
+      currentFileAccess = fileName :: currentFileAccess
+      file
+    }
+    else if( file.exists() && !currentFileAccess.contains(fileName) ){
       currentFileAccess = fileName :: currentFileAccess
       file
     }
     else null
+
+
   }
 
   // updates the content in a file
@@ -76,7 +82,11 @@ class FileManager {
 
   // releases that file from the list of currently accessed
   def releaseFile(fileName : String): Unit ={
-    currentFileAccess = currentFileAccess.filter(fileName == _)
+    var newList : List[String] = List()
+    for(file <- currentFileAccess){
+      if(file != fileName) newList = file :: newList
+    }
+    currentFileAccess = newList
   }
 
   // Checks to see if a file is contained on a server
