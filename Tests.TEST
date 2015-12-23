@@ -32,7 +32,8 @@ END;
 SUCCESS -- Sent back
 FAILURE -- error occured
 
-
+SAVED: fileName
+END
 
 ##########
 # RELEASE#
@@ -42,11 +43,24 @@ RELEASE:
 FILENAME:--filename.txt
 END;
 
+SUCCESS;
+NOPE;
+
+############
+# DIRECTORY#
+############
 // #JustDirectoryThings
-LS -- Test works
+To Proxy / Node
+SEARCH:
+FILENAME:--test.txt
+END;
+
+From Node / to Client:
+SEARCH:
+FILEPATH:--NameOfServer:test.txt
+END;
+
 
 TODO
 WRITE_SNOW_MAN -- writes a unicode snowman in all the files.
-CACHES (with bytes)
-LOCK SERVICE
 DIRECTORY SERVICE ( its kinda done )

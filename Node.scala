@@ -3,7 +3,6 @@ import java.net.{ServerSocket, Socket, SocketException}
 import java.util.concurrent.Executors
 
 object Node {
-
   /**
    * A class that handles the work for the server. It takes in a connection
    * from the server and does some work based off of input to the socket.
@@ -78,12 +77,10 @@ object Node {
               println("Waiting.... ")
               recv = inVal.readLine()
               println("Received: " + recv)
-              if (recv .contains("FILE_READ ")) handleFILE_READ()
-             // else if (recv .contains("FILE_GET ")) handleFILE_GET()
-             // else if (recv .contains("FILE_WRITE ")) handleFILE_WRITE()
-              else if (recv == "WRITE_FILE:") handleWRITE_FILE()
+              if (recv == "WRITE_FILE:") handleWRITE_FILE()
               else if (recv == "GET_FILE:") handleGET_FILE()
-              else if (recv .contains("LS")) handleLS()
+              else if (recv  == "RELEASE:") handleRELEASE_FILE()
+              else if (recv  == "SEARCH:") handleSEARCH()
               else if (recv == "") print("Nothing")
               else {println("Hello")}
             } //if
@@ -93,44 +90,27 @@ object Node {
         }
       }
 
-      def handleFILE_READ(): Unit = {
-        val split = recv.split(" ")
-        val contents = fileManager.getFileContents(split(1))
-        val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "UTF-8")))
-        println("File Contents: " + contents)
-        out.println(contents)
-        out.println("READ")
-        out.flush()
-        println("Sent Back File Contents")
-      }
-
-      def handleFILE_GET(): Unit = {
-        val split = recv.split(" ")
-        fileManager.writeToFile(split(1), split(2))
-      }
+      // Tells the node it is getting a write request
       def handleWRITE_FILE(): Unit = {
 
         val split = recv.split(" ")
         var temp = inVal.readLine()
-        println("Hello0")
+        println(temp)
 
         var temp1 = temp.split("--")
         val fileName = temp1(1)
 
         //get the contents
         temp = inVal.readLine()
-        println("Hello1")
+        println(temp)
 
         temp1 = temp.split("--")
         val contents = temp1(1)
 
         // this should be END;
         temp = inVal.readLine()
-        println("Hello3")
+        println(temp)
 
-        //val split = recv.split(" ")
-        //val fName = split(1)
-        //val toBeWritten = split(2)
         val output = socket.getOutputStream
         if(!fileManager.isFileBeingWrittenTo(fileName)){
           val bytesToBeWritten = contents.getBytes
@@ -156,12 +136,11 @@ object Node {
           outVal.println("Someone else in using that file")
           outVal.flush()
         }
+        println("###################################################################")
       }
 
       // Gets the contents of a file
       def handleGET_FILE(): Unit = {
-
-
 
         val split = recv.split(" ")
         var temp = inVal.readLine()
@@ -194,45 +173,44 @@ object Node {
           outVal.flush()
           println("Sent The Error")
         }
+        println("###################################################################")
+      }
+
+      // Tells the node that someone has released access
+      def handleRELEASE_FILE(): Unit ={
+        var temp = inVal.readLine()
+        var temp1 = temp.split("--")
+        val fileName = temp1(1) // The file name
+        temp = inVal.readLine() // this should be END;
+
+        fileManager.releaseFile(fileName)
+
+        outVal.println("SUCCESS;")
+        outVal.flush()
+        println("File was released")
+        println("###################################################################")
+
       }
 
       // performs LS in the Node
-      def handleLS(): Unit ={
-        val contents = fileManager.lsCommand()
-        var results = ""
-        val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "UTF-8")))
+      def handleSEARCH(): Unit ={
 
-        for(file <- contents) results = results + file + "\n"
+        val fileName = inVal.readLine().split("--")(1)
+        inVal.readLine()// this should be END;
 
-        println(results)
-        if(results == "") {
-          out.println("Nope nothing :(")
-          out.println("LS")
-          out.flush()
-          println("Sent Back Nope LS")
-        } else {
-          out.println(results)
-          out.println("LS")
-          out.flush()
-          println("Sent Back LS")
-        }
-      }
-
-      // Handles writes (in th form of strings) to a file
-      def handleFILE_WRITE(): Unit = {
-        val split = recv.split(" ")
-        if(fileManager.writeToFile(split(1),split(2))){
-          val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "UTF-8")))
-          out.println("Written To File: "+ split(1))
-          out.flush()
-          println("Written To File: "+ split(1))
+        if(fileManager.containsFile(fileName)){
+          outVal.println("SEARCH:")
+          outVal.println("FILEPATH:--Server"+portNumber+":"+fileName)
+          outVal.println("END;")
+          outVal.flush()
+          println("Sent File Location back: Server"+portNumber+":"+fileName )
         }
         else{
-          outVal.println("Someone else has control of the file: "+ split(1))
+          outVal.println("NOT_HERE:")
           outVal.flush()
-          println("Someone else has control of the file: "+ split(1))
+          println("No Such File; Server"+portNumber+":"+fileName)
         }
-
+        println("###################################################################")
       }
 
       // prints a message to all sockets
@@ -264,23 +242,10 @@ object Node {
   var nodes: List[NodeServer] = List()
   val host = "localhost"
   var port = 8080
-  def createNodes(size: Int): Unit = {
-    for (i <- 5 to size) {
-      nodes = new NodeServer(port) :: nodes
-      port = port + 1
-
-    }
-    println("Nodes Created...")
-  }
-
-  def startNodes(size: Int): Unit = {
-    for (n <- nodes) n.run()
-    println("Nodes are running...")
-  }
   // Main method that runs the program
   def main(args: Array[String]) {
-    //val input = readLine("Please Enter in the port to start on: ")
-    new NodeServer(8080).run()
+    val input = readLine("Please Enter in the port to start on: ")
+    new NodeServer(input.toInt).run()
   }
 
 }

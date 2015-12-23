@@ -1,4 +1,4 @@
-import java.io.File
+import java.io.{FileOutputStream, File}
 
 class Cache {
   var contents : List[File] = List()
@@ -7,13 +7,12 @@ class Cache {
 
   // adds to the cache
   def addToCache(file: File): Unit ={
+
     if(currentSize == maxSize)  {
       contents = contents.updated(0, file)
       println("Popped from cache")
     }
     else if(contents.contains(file)){
-      val index = contents.indexOf(file)
-      contents = contents.updated(index, file)
       println("That file is already in the cache")
     }
     else{
@@ -23,17 +22,37 @@ class Cache {
   }
   def getFile( fileName: String): File ={
     for(file <- contents){
-      if(file.getName == fileName) file
+      if(file.getName == fileName)return file
     }
-    null
+    return null
   }
 
   def updateFile(file: File): Unit ={
 
   }
 
-  def isFileInCache(file: File): Boolean ={
-    contents.contains(file)
+  def isFileInCache(nFile: String): Boolean ={
+    for(file <- contents){
+      if(file.getName == nFile){
+        println("Found the file " + nFile + " in the cache")
+        return true
+      }
+    }
+    println("Could not find the file " + nFile + " in the cache")
+    return false
+  }
+
+  def writeToFile(nFile : String, newContents : String): Unit ={
+    for(file <- contents){
+      if(file.getName == nFile){
+        val bytesToBeWritten = newContents.getBytes
+        val fStream = new FileOutputStream(nFile)
+        fStream.write(bytesToBeWritten)
+        fStream.flush()
+        fStream.close()
+        println("Wrote To " +nFile + " in the cache")
+      }
+    }
   }
   // clears the cache's contents
   def clear(): Unit ={
