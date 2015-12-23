@@ -8,9 +8,9 @@ FILE_WRITE test.txt hello // tested works
 // Test Reading and Writing (byte)
 // #JustByteThings
 
-##########
+#########
 # READS #
-##########
+#########
 -- Tested works
 GET_FILE:\n
 FILE_NAME:--test.txt\n
@@ -35,9 +35,22 @@ FAILURE -- error occured
 SAVED: fileName
 END
 
-##########
-# RELEASE#
-##########
+###########
+# DELETES #
+###########
+
+To Proxy / Node
+DELETE_FILE:
+FILE_NAME:--test.txt
+END;
+
+From Node / to Client
+DELETE_FILE:
+RESULT:--SUCCESS / FAILURE
+END;
+###########
+# RELEASE #
+###########
 
 RELEASE:
 FILENAME:--filename.txt
@@ -46,9 +59,9 @@ END;
 SUCCESS;
 NOPE;
 
-############
-# DIRECTORY#
-############
+#############
+# DIRECTORY #
+#############
 // #JustDirectoryThings
 To Proxy / Node
 SEARCH:

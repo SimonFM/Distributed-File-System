@@ -38,10 +38,7 @@ class FileManager {
       filePaths = fileName :: filePaths
       file
     }
-
     else null
-
-
   }
 
   // updates the content in a file
@@ -67,11 +64,21 @@ class FileManager {
      return filePaths.contains(fileName)
   }
 
-// performs LS command for the current FM
+  // performs LS command for the current FM
   def lsCommand(): List[String] ={
-    for(f <- filePaths){
-      println("Inside FM"+f)
+    return filePaths
+  }
+
+  def makeDirectory(folderName : String): Unit ={
+    val theDir = new File(folderName);
+    if(!theDir.exists()){
+      try {
+          theDir.mkdirs()
+      }catch{
+        case secE: SecurityException  =>
+          println("Sorry you're not allowed to Make Directories")
+      }
+      println("Made a new Directory")
     }
-     filePaths
   }
 }

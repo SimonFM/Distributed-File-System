@@ -6,7 +6,7 @@ object Client {
   // val host = "178.62.101.81"
   val host = "localhost"
   //val host = "localhost"
-  val port = 8001
+  val port = 8000
 
   def run(): Unit ={
     try{
@@ -27,6 +27,16 @@ object Client {
 
         println(inVal.readLine())
         println(inVal.readLine())
+
+        out.println("WRITE_FILE:")
+        out.println("FILE_NAME:--test2.txt")
+        out.println("CONTENTS:--Whats up Stephen")
+        out.println("END;")
+        out.flush() // send the request to the server
+        println("Received")
+
+        println(inVal.readLine())
+        println(inVal.readLine())
         println("#######################################################")
         readLine() // wait for input to begin next test
 
@@ -37,6 +47,7 @@ object Client {
         out.flush() // send the request to the
 
         println("Received:")
+        println(inVal.readLine())
         println(inVal.readLine())
         println(inVal.readLine())
         println("#######################################################")
@@ -75,6 +86,30 @@ object Client {
         println(inVal.readLine())
         println("#######################################################")
         readLine()
+        println("DELETE1:")
+        out.println("DELETE_FILE:")
+        out.println("FILE_NAME:--test.txt")
+        out.println("END;")
+        out.flush() // send the request to the server
+
+        println("Received1:")
+        println(inVal.readLine())
+        println(inVal.readLine())
+        println(inVal.readLine())
+
+        println("DELETE2:")
+        out.println("DELETE_FILE:")
+        out.println("FILE_NAME:--test2.txt")
+        out.println("END;")
+        out.flush() // send the request to the server
+
+        println("Received2:")
+        println(inVal.readLine())
+        println(inVal.readLine())
+        println(inVal.readLine())
+        println("#######################################################")
+        readLine()
+
         socket.close()
         println("Socket Closed!")
 

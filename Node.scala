@@ -79,6 +79,7 @@ object Node {
               println("Received: " + recv)
               if (recv == "WRITE_FILE:") handleWRITE_FILE()
               else if (recv == "GET_FILE:") handleGET_FILE()
+              else if (recv == "DELETE_FILE:" ) handleDELETE()
               else if (recv  == "RELEASE:") handleRELEASE_FILE()
               else if (recv  == "SEARCH:") handleSEARCH()
               else if (recv == "") print("Nothing")
@@ -90,6 +91,29 @@ object Node {
         }
       }
 
+      def handleDELETE(): Unit ={
+        val fileName = inVal.readLine().split("--")(1)
+        inVal.readLine()// this should be END;
+        if(fileManager.containsFile(fileName) && !fileManager.isFileBeingWrittenTo(fileName) ){
+          val file = fileManager.getFile(fileName)
+
+          outVal.println("DELETE_FILE:")
+          val result = file.delete()
+          if(result) outVal.println("RESULT:--SUCCESS")
+          else outVal.println("RESULT:--FAILURE")
+          outVal.println("END;")
+          outVal.flush()
+          println("Sent the result of the delete back to the client "+result  )
+        }
+        else{
+          outVal.println("DELETE_FILE:")
+          outVal.println("RESULT:--FAILURE")
+          outVal.println("END;")
+          outVal.flush()
+          println("No Such File; Server"+portNumber+":"+fileName)
+        }
+        println("###################################################################")
+      }
       // Tells the node it is getting a write request
       def handleWRITE_FILE(): Unit = {
 
@@ -194,7 +218,6 @@ object Node {
 
       // performs LS in the Node
       def handleSEARCH(): Unit ={
-
         val fileName = inVal.readLine().split("--")(1)
         inVal.readLine()// this should be END;
 
