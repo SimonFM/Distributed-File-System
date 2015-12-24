@@ -72,9 +72,8 @@ class FileManager {
   def makeDirectory(folderName : String): Unit ={
     val theDir = new File(folderName);
     if(!theDir.exists()){
-      try {
-          theDir.mkdirs()
-      }catch{
+      try theDir.mkdirs()
+      catch{
         case secE: SecurityException  =>
           println("Sorry you're not allowed to Make Directories")
       }

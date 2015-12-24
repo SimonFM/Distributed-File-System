@@ -2,17 +2,18 @@ import java.io._
 import java.net.{ServerSocket, Socket, SocketException}
 import java.util.concurrent.Executors
 
+import scala.io.Source
+
 object Node {
   /**
    * A class that handles the work for the server. It takes in a connection
    * from the server and does some work based off of input to the socket.
    */
   class NodeServer(portNumber: Int) extends Runnable {
-    var NUMBER_OF_THREADS = 20
-    // Maximum number of threads.
-    val serverSocket = new ServerSocket(portNumber) // setting up the server
-    var port = portNumber
-    println("Node running on port number: " + portNumber)
+    var NUMBER_OF_THREADS = 20  // Maximum number of threads.
+    var PORT = portNumber // save the port number
+    val serverSocket = new ServerSocket(PORT) // setting up the server
+    println("Node running on port number: " + PORT)
     // display to console
     val threadPool = Executors.newFixedThreadPool(NUMBER_OF_THREADS) // create the thread pool
 
@@ -22,6 +23,27 @@ object Node {
     // Empty hash table whose keys are strings and values are integers:
     var A:Map[String,Int] = Map()
 
+    var NODE_NAME = ""
+    var folder = ""
+
+    def makeDirectory(folderName : String): Unit ={
+      val theDir = new File(folderName);
+      if(!theDir.exists()){
+        try {
+          theDir.mkdirs()
+        }catch{
+          case secE: SecurityException  => println("Sorry you're not allowed to make folders")
+        }
+        println("Made a new Directory")
+      }
+    }
+
+
+    def makeCacheFolder(): Unit ={
+      makeDirectory(NODE_NAME + "/" + "cache")
+      folder = NODE_NAME + "/" + "cache"
+    }
+
     /**
      * This is the run method of the server, it is needed as I have extended my server
      * to be Runnable, so I could have multiple servers should the need arise.
@@ -30,6 +52,8 @@ object Node {
      */
     def run(): Unit = {
       try {
+       // makeDirectory(NODE_NAME)
+        makeCacheFolder()
         println("Nodes is running on port: " + portNumber)
         while (!serverSocket.isClosed && noKill) {
           try {
@@ -79,7 +103,7 @@ object Node {
               println("Received: " + recv)
               if (recv == "WRITE_FILE:") handleWRITE_FILE()
               else if (recv == "GET_FILE:") handleGET_FILE()
-              else if (recv == "GET_FILE_TIME:" ) handGET_FILE_TIME()
+              else if (recv == "GET_FILE_TIME:" ) handleGET_FILE_TIME()
               else if (recv == "DELETE_FILE:" ) handleDELETE()
               else if (recv  == "RELEASE:") handleRELEASE_FILE()
               else if (recv  == "SEARCH:") handleSEARCH()
@@ -91,8 +115,9 @@ object Node {
           case s: SocketException => println("User pulled the plug")
         }
       }
+
       //get the timeStamp from a file
-      def handGET_FILE_TIME(): Unit ={
+      def handleGET_FILE_TIME(): Unit ={
         val fileName = inVal.readLine().split("--")(1) // The file name
         inVal.readLine()
         if(fileManager.containsFile(fileName)){
@@ -109,6 +134,7 @@ object Node {
           outVal.flush()
         }
       }
+
       // Deletes a file
       def handleDELETE(): Unit ={
         val fileName = inVal.readLine().split("--")(1)
@@ -137,48 +163,46 @@ object Node {
       // Tells the node it is getting a write request
       def handleWRITE_FILE(): Unit = {
 
-        val split = recv.split(" ")
-        var temp = inVal.readLine()
-        println(temp)
+        val fileName = inVal.readLine().split("--")(1)
+        println(fileName)
 
-        var temp1 = temp.split("--")
-        val fileName = temp1(1)
-
+        var temp = ""
+        var contents = List[String]()
+        var response = ""
         //get the contents
-        temp = inVal.readLine()
-        println(temp)
-
-        temp1 = temp.split("--")
-        val contents = temp1(1)
-
-        // this should be END;
-        temp = inVal.readLine()
-        println(temp)
-
-        val output = socket.getOutputStream
-        if(!fileManager.isFileBeingWrittenTo(fileName)){
-          val bytesToBeWritten = contents.getBytes
-          val file = fileManager.getFile(fileName)
-          if(file != null){
-            val fStream = new FileOutputStream(fileName)
-            fStream.write(bytesToBeWritten)
-            fStream.close()
-
-            outVal.println("SUCCESS;")
-            outVal.flush()
-            println("Sent SUCCESS;")
-            fileManager.releaseFile(fileName)
+        while(response != "END;"){
+          response = inVal.readLine()
+          if(response != "END;" && response != "CONTENTS:--"){
+            temp = response.split("--")(1)
+            println(temp)
+            contents = contents ++ List(temp)
           }
-          else{
-            outVal.println("FAILURE;")
-            outVal.flush()
-            println("FAILURE;" )
-          }
+          else if( response == "CONTENTS:--")
+            contents = contents ++ List("")
 
         }
-        else{
-          outVal.println("Someone else in using that file")
+
+        val output = socket.getOutputStream
+        if(!fileManager.isFileBeingWrittenTo(fileName)) {
+          val writer = new PrintWriter(new File(fileName))
+          for (l <- contents) {
+            println("Contents: "+l)
+            if("" != l){
+              writer.write(l+"\n")
+              writer.flush()
+            }
+
+          }
+          writer.close()
+          outVal.println("SUCCESS;")
           outVal.flush()
+          println("Sent SUCCESS;")
+          fileManager.releaseFile(fileName)
+        }
+        else{
+           outVal.println("FAILURE;")
+           outVal.flush()
+           println("FAILURE;" )
         }
         println("###################################################################")
       }
@@ -201,12 +225,10 @@ object Node {
           val fileInput = new FileInputStream(theFile)
           println("Got a File Request " + fileName)
 
-          val contents = new Array[Byte](theFile.length().toInt)
+          val lines = Source.fromFile(fileName).getLines().toList
 
-          fileInput.read(contents)
-          val toSendBack = new String(contents)
           outVal.println("FILE_CONTENTS:")
-          outVal.println("CONTENTS:--" + toSendBack)
+          for(l <- lines) outVal.println("CONTENTS:--" + l)
           outVal.println("END;")
           outVal.flush()
           println("Sent back File")
@@ -283,12 +305,15 @@ object Node {
   }
 
   var nodes: List[NodeServer] = List()
-  val host = "localhost"
-  var port = 8080
+  val HOST = "localhost"
+  var PORT = 8080
+
   // Main method that runs the program
   def main(args: Array[String]) {
     val input = readLine("Please Enter in the port to start on: ")
-    new NodeServer(input.toInt).run()
+    val node = new NodeServer(input.toInt)
+    node.NODE_NAME = "NODE:"+input
+    node.run()
   }
 
 }

@@ -6,15 +6,16 @@ import java.io._
 import java.net._
 import java.util.concurrent.Executors
 
+import scala.io.Source
+
 object DirectoryServer {
 
   var connection = 0
-  var ports = 8080
   var id = 0
   val numberOfNodes = 3
-  val host = "localhost"
+  val HOST = "localhost"
 
-  var portsToFile : Map[String,Int] = Map()
+  var portsToFile : Map[String, Int] = Map()
 
   val cache = new Cache
   /**
@@ -122,8 +123,8 @@ object DirectoryServer {
         var temp = inVal.readLine()
         val fileName = temp.split("--")(1) // The file name
         inVal.readLine() // this should be END;
-        if (fileMap.fileExists(fileName)) {
-          if (cache.isFileInCache(fileName)) {
+        if (fileMap.fileExists(fileName)){
+          if (cache.isFileInCache(fileName)){
             val file = new File(fileName)
             out.println("GET_FILE_TIME:")
             out.println("TIME:--" + file.lastModified())
@@ -132,7 +133,7 @@ object DirectoryServer {
           }
           else {
             // tell the node we want the timestamp of the file
-            val nodeSocket = new Socket("localhost", fileMap.getPort(fileName))
+            val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
             val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
             val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
             lazy val nodeInVal = new BufferedReader(nodeInStream)
@@ -156,7 +157,11 @@ object DirectoryServer {
               out.flush()
               println("Sent time back to user " + contents)
             }
-            else{} //TODO
+            else{
+              out.println("ERROR - 99")
+              out.println("END;")
+              out.flush()
+            }
           }
         }
       }
@@ -167,7 +172,7 @@ object DirectoryServer {
         val fileName = temp.split("--")(1) // The file name
         inVal.readLine() // this should be END;
         if(fileMap.fileExists(fileName)){
-          val nodeSocket = new Socket("localhost", fileMap.getPort(fileName))
+          val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
           val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
           lazy val nodeInVal = new BufferedReader(nodeInStream)
@@ -189,20 +194,21 @@ object DirectoryServer {
           }
         }
         else{
-          out.println("No Such File;")
+          out.println("ERROR - 99")
+          out.println("END;")
           out.flush()
           println("No Such File;")
         }
 
       }
 
-      // Handles a seacrh for a file
+      // Handles a search for a file
       def handleSEARCH(): Unit = {
         var temp = inVal.readLine()
         val fileName = temp.split("--")(1) // The file name
         temp = inVal.readLine() // this should be END;
         if(fileMap.fileExists(fileName)){
-          val nodeSocket = new Socket("localhost", fileMap.getPort(fileName))
+          val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
           val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
           lazy val nodeInVal = new BufferedReader(nodeInStream)
@@ -223,13 +229,15 @@ object DirectoryServer {
             println("Sent the SEARCH Request To client")
           }
           else{
-            out.println("No Such File;")
+            out.println("ERROR - 99")
+            out.println("END;")
             out.flush()
             println("No Such File;")
           }
         }
         else{
-          out.println("No Such File;")
+          out.println("ERROR - 99")
+          out.println("END;")
           out.flush()
           println("No Such File;")
         }
@@ -243,7 +251,7 @@ object DirectoryServer {
         val fileName = temp.split("--")(1) // The file name
         temp = inVal.readLine() // this should be END;
         if(fileMap.fileExists(fileName)){
-          val nodeSocket = new Socket("localhost", fileMap.getPort(fileName))
+          val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
           val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
           lazy val nodeInVal = new BufferedReader(nodeInStream)
@@ -277,28 +285,34 @@ object DirectoryServer {
 
         var temp1 = temp.split("--")
         val fileName = temp1(1)
+        var contents = List[String]()
+        var response = ""
         //get the contents
-        temp = inVal.readLine()
-        temp1 = temp.split("--")
-        val contents = temp1(1)
-        println(temp)
+        while(response != "END;"){
+          response = inVal.readLine()
+          if(response != "END;" && response != "CONTENTS:--"){
+            temp = response.split("--")(1)
+            println(temp)
+            contents = contents ++ List(temp)
+          }
+//          else if( response == "CONTENTS:--")
+//            contents = contents ++ List("")
 
-        // this should be END;
-        temp = inVal.readLine()
-        println(temp)
+        }
         fileMap.addToMap(fileName)
-
 
         if(!cache.isFileInCache(fileName)){
 
           // tell the node we want to write the file
-          val nodeSocket = new Socket("localhost", fileMap.getPort(fileName))
+          val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
           val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
           lazy val nodeInVal = new BufferedReader(nodeInStream)
           nodeOut.println("WRITE_FILE:")
           nodeOut.println("FILE_NAME:--" + fileName)
-          nodeOut.println("CONTENTS:--" + contents)
+          for(s <- contents)
+            nodeOut.println("CONTENTS:--" + s)
+
           nodeOut.println("END;")
           nodeOut.flush()
           println("Sent the File Request")
@@ -321,7 +335,7 @@ object DirectoryServer {
           println("Telling nodes to update from my Cache...")
           println(contents)
           cache.writeToFile(fileName, contents)
-          val nodeSocket = new Socket("localhost", 8080)
+          val nodeSocket = new Socket(HOST, 8080)
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
           val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
           lazy val nodeInVal = new BufferedReader(nodeInStream)
@@ -360,7 +374,7 @@ object DirectoryServer {
         if(fileMap.fileExists(fileName)){
           if(!cache.isFileInCache(fileName)){
             // tell the node we want to write the file
-            val nodeSocket = new Socket("localhost", fileMap.getPort(fileName))
+            val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
             val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
             val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
             lazy val nodeInVal = new BufferedReader(nodeInStream)
@@ -375,14 +389,24 @@ object DirectoryServer {
             println(temp)
             if (temp != "ERROR - 99") {
               // gather up the contents
-              val contents = nodeInVal.readLine().split("--")(1)
-              println(contents)
-              temp = nodeInVal.readLine()
-              println(temp)
+              ///val contents = nodeInVal.readLine().split("--")(1)
 
+              var contents = List[String]()
+              var response = ""
+              while(response != "END;"){
+                response = inVal.readLine()
+                if(response != "END;" && response != "CONTENTS:--"){
+                  temp = response.split("--")(1)
+                  println(temp)
+                  contents = contents ++ List(temp)
+                }
+                else if( response == "CONTENTS:--")
+                  contents = contents ++ List("")
+
+              }
               //Now send the contents back to the user
               out.println("FILE_CONTENTS:")
-              out.println("CONTENTS:--" + contents)
+              for(l <- contents) out.println("CONTENTS:--" + l)
               out.println("END;")
               out.flush()
               println("Sent contents back to user " + contents)
@@ -398,19 +422,22 @@ object DirectoryServer {
             val fileInput = new FileInputStream(theFile)
             val contents = new Array[Byte](theFile.length().toInt)
             fileInput.read(contents)
-            val toSendBack = new String(contents)
             //Now send the contents back to the user
+            val lines = Source.fromFile(fileName).getLines().toList
+
             out.println("FILE_CONTENTS:")
-            out.println("CONTENTS:--" + new String(contents))
+            for(l <- lines) out.println("CONTENTS:--" + l)
+
             out.println("END;")
             out.flush()
             println("Sent a copy of " + fileName + " from the cache.")
-            println(new String(contents))
-
           }
         }
-        else{} // TODO
-
+        else{
+          out.println("ERROR - 99")
+          out.println("END;")
+          out.flush()
+        }
         println("###################################################################")
       }
 

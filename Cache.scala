@@ -1,4 +1,4 @@
-import java.io.{FileOutputStream, File}
+import java.io.{File, PrintWriter}
 
 class Cache {
   var contents : List[File] = List()
@@ -20,6 +20,8 @@ class Cache {
       println("Added file to the cache")
     }
   }
+
+  // returns the file from the cache
   def getFile( fileName: String): File ={
     for(file <- contents){
       if(file.getName == fileName)return file
@@ -27,10 +29,12 @@ class Cache {
     return null
   }
 
+  //
   def updateFile(file: File): Unit ={
 
   }
 
+  //
   def isFileInCache(nFile: String): Boolean ={
     for(file <- contents){
       if(file.getName == nFile){
@@ -42,22 +46,25 @@ class Cache {
     return false
   }
 
-  def writeToFile(nFile : String, newContents : String): Unit ={
+  //
+  def writeToFile(nFile : String, newContents : List[String]): Unit ={
     for(file <- contents){
       if(file.getName == nFile){
-        val bytesToBeWritten = newContents.getBytes
-        val fStream = new FileOutputStream(folder+nFile)
-        fStream.write(bytesToBeWritten)
-        fStream.flush()
-        fStream.close()
+        val writer = new PrintWriter(new File(nFile))
+        for(l <- newContents){
+          writer.write(l+"\n")
+          writer.flush()
+        }
+        writer.close()
         println("Wrote To " +folder+nFile + " in the cache")
-        println("Wrote " + new String(bytesToBeWritten) + " in the cache")
       }
     }
   }
+
   // clears the cache's contents
   def clear(): Unit ={
     contents = List()
     println("Cache Cleared")
   }
+
 }
