@@ -79,6 +79,7 @@ object Node {
               println("Received: " + recv)
               if (recv == "WRITE_FILE:") handleWRITE_FILE()
               else if (recv == "GET_FILE:") handleGET_FILE()
+              else if (recv == "GET_FILE_TIME:" ) handGET_FILE_TIME()
               else if (recv == "DELETE_FILE:" ) handleDELETE()
               else if (recv  == "RELEASE:") handleRELEASE_FILE()
               else if (recv  == "SEARCH:") handleSEARCH()
@@ -90,7 +91,25 @@ object Node {
           case s: SocketException => println("User pulled the plug")
         }
       }
-
+      //get the timeStamp from a file
+      def handGET_FILE_TIME(): Unit ={
+        val fileName = inVal.readLine().split("--")(1) // The file name
+        inVal.readLine()
+        if(fileManager.containsFile(fileName)){
+          val f = new File(fileName)
+          outVal.println("GET_FILE_TIME:")
+          outVal.println("TIME:--" + f.lastModified())
+          outVal.println("END;")
+          outVal.flush()
+          println("Sent time back to user " + f.lastModified())
+        }
+        else{
+          outVal.println("ERROR - 99")
+          outVal.println("END;")
+          outVal.flush()
+        }
+      }
+      // Deletes a file
       def handleDELETE(): Unit ={
         val fileName = inVal.readLine().split("--")(1)
         inVal.readLine()// this should be END;
@@ -114,6 +133,7 @@ object Node {
         }
         println("###################################################################")
       }
+
       // Tells the node it is getting a write request
       def handleWRITE_FILE(): Unit = {
 
@@ -186,7 +206,7 @@ object Node {
           fileInput.read(contents)
           val toSendBack = new String(contents)
           outVal.println("FILE_CONTENTS:")
-          outVal.println("CONTENTS:" + toSendBack)
+          outVal.println("CONTENTS:--" + toSendBack)
           outVal.println("END;")
           outVal.flush()
           println("Sent back File")

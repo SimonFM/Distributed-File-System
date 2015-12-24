@@ -66,8 +66,6 @@ object DirectoryServer {
       }
     }
 
-
-
     /**
      * A class that handles the work for the server. It takes in a connection
      * from the server and does some work based off of input to the socket.
@@ -103,6 +101,7 @@ object DirectoryServer {
               if      (recv.contains("KILL_SERVICE")) handleKILL()
               else if (recv.contains("HELO ")) handleHELO()
               else if (recv == "SEARCH:" ) handleSEARCH()
+              else if (recv == "GET_FILE_TIME:" ) handGET_FILE_TIME()
               else if (recv == "LS:" ) handleSEARCH()
               else if (recv == "DELETE_FILE:" ) handleDELETE()
               else if (recv == "GET_FILE:") handleGET_FILE()
@@ -118,6 +117,51 @@ object DirectoryServer {
         }
       }
 
+      //Gets the file time from a file
+      def handGET_FILE_TIME(): Unit = {
+        var temp = inVal.readLine()
+        val fileName = temp.split("--")(1) // The file name
+        inVal.readLine() // this should be END;
+        if (fileMap.fileExists(fileName)) {
+          if (cache.isFileInCache(fileName)) {
+            val file = new File(fileName)
+            out.println("GET_FILE_TIME:")
+            out.println("TIME:--" + file.lastModified())
+            out.println("END;")
+            out.flush() // send the request to the server
+          }
+          else {
+            // tell the node we want the timestamp of the file
+            val nodeSocket = new Socket("localhost", fileMap.getPort(fileName))
+            val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
+            val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
+            lazy val nodeInVal = new BufferedReader(nodeInStream)
+            nodeOut.println("GET_FILE_TIME:")
+            nodeOut.println("TIME:--" + fileName)
+            nodeOut.println("END;")
+            nodeOut.flush()
+            println("Sent the Time Stamp Request")
+
+            // should be the header
+            temp = nodeInVal.readLine()
+            println(temp)
+            if (temp != "ERROR - 99") {
+              // gather up the contents
+              val contents = nodeInVal.readLine().split("--")(1)
+              temp = nodeInVal.readLine()
+              //Now send the contents back to the user
+              out.println("GET_FILE_TIME:")
+              out.println("TIME:--" + contents)
+              out.println("END;")
+              out.flush()
+              println("Sent time back to user " + contents)
+            }
+            else{} //TODO
+          }
+        }
+      }
+
+      // Deletes a file
       def handleDELETE(): Unit ={
         var temp = inVal.readLine()
         val fileName = temp.split("--")(1) // The file name
@@ -152,6 +196,7 @@ object DirectoryServer {
 
       }
 
+      // Handles a seacrh for a file
       def handleSEARCH(): Unit = {
         var temp = inVal.readLine()
         val fileName = temp.split("--")(1) // The file name
@@ -263,6 +308,7 @@ object DirectoryServer {
 
           if (temp == "SUCCESS;"){
             cache.addToCache(new File(fileName) )
+            cache.writeToFile(fileName,contents)
             out.println("SAVED: "+fileName)
             out.println("END;")
             out.flush()
@@ -273,6 +319,7 @@ object DirectoryServer {
         }
         else{
           println("Telling nodes to update from my Cache...")
+          println(contents)
           cache.writeToFile(fileName, contents)
           val nodeSocket = new Socket("localhost", 8080)
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
@@ -328,14 +375,14 @@ object DirectoryServer {
             println(temp)
             if (temp != "ERROR - 99") {
               // gather up the contents
-              val contents = nodeInVal.readLine()
+              val contents = nodeInVal.readLine().split("--")(1)
               println(contents)
               temp = nodeInVal.readLine()
               println(temp)
 
               //Now send the contents back to the user
               out.println("FILE_CONTENTS:")
-              out.println("CONTENTS:" + contents)
+              out.println("CONTENTS:--" + contents)
               out.println("END;")
               out.flush()
               println("Sent contents back to user " + contents)
@@ -354,12 +401,15 @@ object DirectoryServer {
             val toSendBack = new String(contents)
             //Now send the contents back to the user
             out.println("FILE_CONTENTS:")
-            out.println("CONTENTS:" + contents)
+            out.println("CONTENTS:--" + new String(contents))
             out.println("END;")
             out.flush()
             println("Sent a copy of " + fileName + " from the cache.")
+            println(new String(contents))
+
           }
         }
+        else{} // TODO
 
         println("###################################################################")
       }

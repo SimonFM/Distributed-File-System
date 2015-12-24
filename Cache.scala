@@ -4,7 +4,7 @@ class Cache {
   var contents : List[File] = List()
   val maxSize = 10
   val currentSize = 0
-
+  var folder = ""
   // adds to the cache
   def addToCache(file: File): Unit ={
 
@@ -46,11 +46,12 @@ class Cache {
     for(file <- contents){
       if(file.getName == nFile){
         val bytesToBeWritten = newContents.getBytes
-        val fStream = new FileOutputStream(nFile)
+        val fStream = new FileOutputStream(folder+nFile)
         fStream.write(bytesToBeWritten)
         fStream.flush()
         fStream.close()
-        println("Wrote To " +nFile + " in the cache")
+        println("Wrote To " +folder+nFile + " in the cache")
+        println("Wrote " + new String(bytesToBeWritten) + " in the cache")
       }
     }
   }
