@@ -27,7 +27,7 @@ object Node {
     var folder = ""
 
     def makeDirectory(folderName : String): Unit ={
-      val theDir = new File(folderName)
+      val theDir = new File(folderName);
       if(!theDir.exists()){
         try {
           theDir.mkdirs()
@@ -160,35 +160,6 @@ object Node {
         println("###################################################################")
       }
 
-      def writeToNodes(fileName : String, contents : List[String] ): Unit ={
-        var port = 9000
-        while(port < 9003){
-          // tell the node we want to write the file
-          val nodeSocket = new Socket(HOST, port)
-          val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
-          val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
-          lazy val nodeInVal = new BufferedReader(nodeInStream)
-          nodeOut.println("WRITE_FILE:")
-          nodeOut.println("FILE_NAME:--" + fileName)
-          for(s <- contents)
-            nodeOut.println("CONTENTS:--" + s)
-
-          nodeOut.println("END;")
-          nodeOut.flush()
-          println("Sent the File Request")
-
-          // ACK back
-          if ( nodeInVal.readLine() == "SUCCESS;"){
-            outVal.println("SAVED: "+fileName)
-            outVal.println("END;")
-            outVal.flush()
-            println("File Successfully written")
-          }
-          else println("FAILURE-WRITE")
-          port = port + 1
-        }
-      }
-
       // Tells the node it is getting a write request
       def handleWRITE_FILE(): Unit = {
 
@@ -227,8 +198,6 @@ object Node {
           outVal.flush()
           println("Sent SUCCESS;")
           fileManager.releaseFile(fileName)
-          //perfom replication
-          writeToNodes(fileName,contents)
         }
         else{
            outVal.println("FAILURE;")
