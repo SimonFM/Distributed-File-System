@@ -25,21 +25,24 @@ class FileManager {
       result
   }
 
-  // Returns the actual file and not the contents
-  def getFile(fileName : String): File ={
-    val file = new File(fileName)
-    if( file.exists() && !currentFileAccess.contains(fileName) ){
-      currentFileAccess = fileName :: currentFileAccess
-      filePaths = fileName :: filePaths
-      file
-    }
-    else if(!file.exists()){
-      currentFileAccess = fileName :: currentFileAccess
-      filePaths = fileName :: filePaths
-      file
-    }
-    else null
+  def addFile(fileName : String): Unit ={
+    println("Added the "+fileName+ " to the system")
+    filePaths = fileName :: filePaths
   }
+
+//  // Returns the actual file and not the contents
+//  def getFile(fileName : String): File ={
+//    val file = new File(fileName)
+//    if( file.exists() && !filePaths.contains(fileName) ) {
+//      filePaths = fileName :: filePaths
+//      return file
+//    }
+//    else if (file && !currentFileAccess.contains()){
+//
+//    }
+//    else return null
+//
+//  }
 
   // updates the content in a file
   def updateFile(fileName : String, newFile: Array[Byte]): Unit ={
@@ -49,19 +52,26 @@ class FileManager {
     fileStream.write(newFile)
     fileStream.close()
   }
+  def lock(fileName : String): Unit ={
+    println("Locking the file: "+fileName)
+    println("OldList1: " + currentFileAccess)
+    currentFileAccess = fileName :: currentFileAccess
+    println("OldList2: " + currentFileAccess)
 
+  }
   // releases that file from the list of currently accessed
   def releaseFile(fileName : String): Unit ={
     var newList : List[String] = List()
-    for(file <- currentFileAccess){
+    for(file <- currentFileAccess)
       if(file != fileName) newList = file :: newList
-    }
+    println("NewList: "+newList)
+    println("OldList: "+currentFileAccess)
     currentFileAccess = newList
   }
 
   // Checks to see if a file is contained on a server
   def containsFile(fileName: String) : Boolean ={
-     return filePaths.contains(fileName)
+     return new File(fileName).exists()
   }
 
   // performs LS command for the current FM

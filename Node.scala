@@ -52,8 +52,7 @@ object Node {
      */
     def run(): Unit = {
       try {
-       // makeDirectory(NODE_NAME)
-        makeCacheFolder()
+        makeDirectory("Node-"+PORT)
         println("Nodes is running on port: " + portNumber)
         while (!serverSocket.isClosed && noKill) {
           try {
@@ -121,7 +120,7 @@ object Node {
         val fileName = inVal.readLine().split("--")(1) // The file name
         inVal.readLine()
         if(fileManager.containsFile(fileName)){
-          val f = new File(fileName)
+          val f = new File("Node-"+PORT+"/"+fileName)
           outVal.println("GET_FILE_TIME:")
           outVal.println("TIME:--" + f.lastModified())
           outVal.println("END;")
@@ -140,7 +139,7 @@ object Node {
         val fileName = inVal.readLine().split("--")(1)
         inVal.readLine()// this should be END;
         if(fileManager.containsFile(fileName) && !fileManager.isFileBeingWrittenTo(fileName) ){
-          val file = fileManager.getFile(fileName)
+          val file = new File("Node-"+PORT+"/"+fileName)
 
           outVal.println("DELETE_FILE:")
           val result = file.delete()
@@ -206,34 +205,58 @@ object Node {
             println(temp)
             contents = contents ++ List(temp)
           }
-          else if( response == "CONTENTS:--")
-            contents = contents ++ List("")
-
+          else if( response == "CONTENTS:--")  contents = contents ++ List("")
         }
+        val file = new File("Node-"+PORT+"/"+fileName)
+        if(file.exists()){
+          val output = socket.getOutputStream
+          if(!fileManager.isFileBeingWrittenTo(fileName)) {
+            fileManager.lock(fileName)
+            fileManager.addFile(fileName)
+            val writer = new PrintWriter(file)
+            for (l <- contents) {
+              println("Contents: "+l)
+              if("" != l){
+                writer.write(l+"\n")
+                writer.flush()
+              }
+            }
+            writer.close()
+            outVal.println("SAVED: "+fileName)
+            outVal.println("END;")
+            outVal.flush()
+            fileManager.releaseFile(fileName)
+            println("Sent SAVED;")
+            //perform replication
+            writeToNodes(fileName,contents)
 
-        val output = socket.getOutputStream
-        if(!fileManager.isFileBeingWrittenTo(fileName)) {
-          val writer = new PrintWriter(new File(fileName))
+          }
+          else{
+            outVal.println("FAILURE;")
+            outVal.flush()
+            println("FAILURE;" )
+          }
+        }
+        else{ // write
+          fileManager.lock(fileName)
+          fileManager.addFile(fileName)
+          val writer = new PrintWriter(file)
           for (l <- contents) {
             println("Contents: "+l)
             if("" != l){
               writer.write(l+"\n")
               writer.flush()
             }
-
           }
           writer.close()
-          outVal.println("SUCCESS;")
+          outVal.println("SAVED: "+fileName)
+          outVal.println("END;")
           outVal.flush()
-          println("Sent SUCCESS;")
           fileManager.releaseFile(fileName)
-          //perfom replication
+          println("Sent SAVED;")
+          //perform replication
           writeToNodes(fileName,contents)
-        }
-        else{
-           outVal.println("FAILURE;")
-           outVal.flush()
-           println("FAILURE;" )
+
         }
         println("###################################################################")
       }
@@ -250,26 +273,32 @@ object Node {
         // this should be END;
         temp = inVal.readLine()
         println(temp)
+        val theFile = new File ("Node-"+PORT+"/"+fileName)
+        if(theFile.exists()){
+          if(!fileManager.isFileBeingWrittenTo(fileName)){
 
-        if(!fileManager.isFileBeingWrittenTo(fileName)){
-          val theFile = fileManager.getFile(fileName)
-          val fileInput = new FileInputStream(theFile)
-          println("Got a File Request " + fileName)
+            println("Got a File Request " + fileName)
+            val lines = Source.fromFile("Node-"+PORT+"/"+fileName).getLines().toList
 
-          val lines = Source.fromFile(fileName).getLines().toList
+            outVal.println("FILE_CONTENTS:")
+            for(l <- lines) outVal.println("CONTENTS:--" + l)
+            outVal.println("END;")
+            outVal.flush()
+            println("Sent back File")
 
-          outVal.println("FILE_CONTENTS:")
-          for(l <- lines) outVal.println("CONTENTS:--" + l)
-          outVal.println("END;")
-          outVal.flush()
-          println("Sent back File")
-
+          }
+          else{
+            outVal.println("ERROR-99")
+            outVal.flush()
+            println("Sent The Error")
+          }
         }
         else{
-          outVal.println("ERROR - 99")
+          outVal.println("ERROR-99")
           outVal.flush()
-          println("Sent The Error")
+          println("File Doesn't Exist")
         }
+
         println("###################################################################")
       }
 
@@ -294,7 +323,7 @@ object Node {
         val fileName = inVal.readLine().split("--")(1)
         inVal.readLine()// this should be END;
 
-        if(fileManager.containsFile(fileName)){
+        if(fileManager.containsFile("Node-"+PORT+"/"+fileName)){
           outVal.println("SEARCH:")
           outVal.println("FILEPATH:--Server"+portNumber+":"+fileName)
           outVal.println("END;")

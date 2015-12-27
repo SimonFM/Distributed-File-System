@@ -1,4 +1,4 @@
-import java.io.{File, PrintWriter}
+import java.io.{PrintWriter, File}
 
 class Cache {
   var contents : List[File] = List()
@@ -23,24 +23,17 @@ class Cache {
 
   // returns the file from the cache
   def getFile( fileName: String): File ={
-    for(file <- contents){
-      if(file.getName == fileName)return file
-    }
-    return null
-  }
-
-  //
-  def updateFile(file: File): Unit ={
-
+    val file = new File(fileName)
+    if(file.exists())
+      return file
+    else null
   }
 
   //
   def isFileInCache(nFile: String): Boolean ={
-    for(file <- contents){
-      if(file.getName == nFile){
-        println("Found the file " + nFile + " in the cache")
-        return true
-      }
+    if(new File(nFile).exists()){
+      println("Found the file " + nFile + " in the cache")
+      return true
     }
     println("Could not find the file " + nFile + " in the cache")
     return false
@@ -48,17 +41,14 @@ class Cache {
 
   //
   def writeToFile(nFile : String, newContents : List[String]): Unit ={
-    for(file <- contents){
-      if(file.getName == nFile){
-        val writer = new PrintWriter(new File(nFile))
-        for(l <- newContents){
-          writer.write(l+"\n")
-          writer.flush()
-        }
-        writer.close()
-        println("Wrote To " +folder+nFile + " in the cache")
-      }
+    val file = getFile(folder+nFile)
+    val writer = new PrintWriter(new File(nFile))
+    for(l <- newContents){
+      writer.write(l+"\n")
+      writer.flush()
     }
+    writer.close()
+    println("Wrote To " +folder+nFile + " in the cache")
   }
 
   // clears the cache's contents

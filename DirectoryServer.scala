@@ -18,6 +18,9 @@ object DirectoryServer {
   var portsToFile : Map[String, Int] = Map()
 
   val cache = new Cache
+  val folder = "DirectorySever"
+
+  cache.folder = folder+"DirectoryCache"
   /**
    * This is a simple server class to represent a multi threaded server.
    * It contains both a Server and a Worker class. The worker doing all the
@@ -216,14 +219,15 @@ object DirectoryServer {
           nodeOut.println("FILENAME:--" + fileName)
           nodeOut.println("END;")
           nodeOut.flush()
-          println("Sent the SEARCH Request To Nodes")
+          println("Sent the SEARCH Request To Node")
 
           // wait for an ACK
           if( nodeInVal.readLine() == "SEARCH:"){
             val fileLocation = nodeInVal.readLine().split("--")(1)
             nodeInVal.readLine()
             out.println("SEARCH:")
-            out.println("FILEPATH:--" + fileLocation)
+            out.println("IP:--" + HOST)
+            out.println("PORT:--" + fileMap.getPort(fileName))
             out.println("END;")
             out.flush()
             println("Sent the SEARCH Request To client")
@@ -236,12 +240,14 @@ object DirectoryServer {
           }
         }
         else{
-          out.println("ERROR - 99")
+          fileMap.addToMap(fileName)
+          out.println("SEARCH:")
+          out.println("IP:--" + HOST)
+          out.println("PORT:--" + fileMap.getPort(fileName))
           out.println("END;")
           out.flush()
-          println("No Such File;")
+          println("New File;")
         }
-
         println("###################################################################")
       }
 
@@ -335,7 +341,7 @@ object DirectoryServer {
           println("Telling nodes to update from my Cache...")
           println(contents)
           cache.writeToFile(fileName, contents)
-          val nodeSocket = new Socket(HOST, 8080)
+          val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
           val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
           lazy val nodeInVal = new BufferedReader(nodeInStream)

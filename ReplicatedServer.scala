@@ -55,8 +55,7 @@ object ReplicatedNode {
      */
     def run(): Unit = {
       try {
-        // makeDirectory(NODE_NAME)
-        makeCacheFolder()
+        makeDirectory("Replicated")
         println("Nodes is running on port: " + portNumber)
         while (!serverSocket.isClosed && noKill) {
           try {
@@ -143,7 +142,7 @@ object ReplicatedNode {
         val fileName = inVal.readLine().split("--")(1)
         inVal.readLine()// this should be END;
         if(fileManager.containsFile(fileName) && !fileManager.isFileBeingWrittenTo(fileName) ){
-          val file = fileManager.getFile(fileName)
+          val file = new File("Node-"+PORT+"/"+fileName)
 
           outVal.println("DELETE_FILE:")
           val result = file.delete()
@@ -187,7 +186,7 @@ object ReplicatedNode {
 
         val output = socket.getOutputStream
         if(!fileManager.isFileBeingWrittenTo(fileName)) {
-          val writer = new PrintWriter(new File(fileName))
+          val writer = new PrintWriter(new File("Replicated"+"/"+fileName))
           for (l <- contents) {
             println("Contents: "+l)
             if("" != l){
@@ -224,7 +223,7 @@ object ReplicatedNode {
         println(temp)
 
         if(!fileManager.isFileBeingWrittenTo(fileName)){
-          val theFile = fileManager.getFile(fileName)
+          val theFile = new File("Replicated"+"/"+fileName)
           val fileInput = new FileInputStream(theFile)
           println("Got a File Request " + fileName)
 
@@ -313,6 +312,7 @@ object ReplicatedNode {
 
   // Main method that runs the program
   def main(args: Array[String]) {
+
     val input = readLine("Please Enter in the port to start on: ")
     val node = new ReplicatedNodeServer(input.toInt)
     node.NODE_NAME = "NODE:"+input
