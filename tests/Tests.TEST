@@ -74,6 +74,3 @@ FILEPATH:--NameOfServer:test.txt
 END;
 
 
-TODO
-WRITE_SNOW_MAN -- writes a unicode snowman in all the files.
-DIRECTORY SERVICE ( its kinda done )

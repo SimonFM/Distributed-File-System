@@ -40,7 +40,7 @@ object Client {
 
   // Writes to a file existing on a clients machine to the file system
   def writeFile(fileName : String): Unit ={
-    val path = clientName + "/" + fileName
+    val path = clientName + "/" + "cache"+ "/" + fileName
     val file = new File(path)
     if(!file.exists()) println("Sorry '" + path + "' could not be found")
     else{
@@ -48,6 +48,8 @@ object Client {
       if(result != "NOPE"){
         val IP = result.split("--")(0)
         val PORT = result.split("--")(1)
+
+        // connect to the designated node
         val nodeSocket = new Socket(IP, PORT.toInt)
         val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
         val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
@@ -194,7 +196,7 @@ object Client {
           }
 
         }
-        else println("Their the same")
+        else println("They're the same")
       }
     }
     else println("SERVER DOES NOT HAVE A FILE CALLED: "+fileName)
