@@ -8,6 +8,12 @@ To run my DFS, I used IntelliJ to run the separate servers on my local host. I w
 - Replicated Nodes (localhost, ports(9000 to 9003))  these need to be hardcoded, as they only simulate replication.
 
 To run the start.sh file on linux / mac, you will need to run each start.sh file in a separate terminal window (as the processes will consume one window)
+###Flow of Start up
+- Run Directory
+- Run Nodes between (8080 -> maxPort(8082))
+- Run ReplicatedNodes (9000 -> 9003)
+- Run Client (enter desired Username)
+
 
 ##Infomation about it
 Features I chose to implement were:
