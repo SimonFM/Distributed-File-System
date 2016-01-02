@@ -9,7 +9,7 @@ To run my DFS, I used IntelliJ to run the separate servers on my local host. I w
 
 To run the start.sh file on linux / mac, you will need to run each start.sh file in a separate terminal window (as the processes will consume one window)
 ###Flow of Start up
-- Run Directory
+- Run Directory (please choose 8000 as a command line param)
 - Run Nodes between (8080 -> maxPort(8082))
 - Run ReplicatedNodes (9000 -> 9003)
 - Run Client (enter desired Username)
