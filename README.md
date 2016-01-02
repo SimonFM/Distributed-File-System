@@ -45,9 +45,9 @@ Features I chose to implement were:
 ##API Commands:
 ### Delete a file
 ```Javascript
-DELETE_FILE:
-FILE_NAME:--test.txt
-END;
+DELETE_FILE:\n
+FILE_NAME:--test.txt\n
+END;\n
 ```
 ---
 
@@ -58,50 +58,53 @@ FILE_NAME:--test.txt\n
 CONTENTS:--'newThings To say'\n
 END;
 
-SUCCESS -- Sent back
-FAILURE -- error occured
 
-SAVED: fileName
-END
+Sent Back
+SAVED: fileName\n
+END\n
+
+or 
+FAILURE;\n
+\n
 ```
 ---
 
 ###Read the contents of a file
 ```javascript
--- Tested works
+-- Tested works\n
 GET_FILE:\n
 FILE_NAME:--test.txt\n
-END;
+END;\n
 
 --Transferring file data
 FILE_CONTENTS:\n
 CONTENTS: <contents>\n
-END;
+END;\n
 ```
 ---
 
 ###Release lock on a file
 ```javascript
-RELEASE:
-FILENAME:--filename.txt
-END;
+RELEASE:\n
+FILENAME:--filename.txt\n
+END;\n
 
-SUCCESS;
-NOPE;
+SUCCESS;\n
+NOPE;\n
 ```
 ---
 
 ###Search for File
 ```javascript
 To Proxy / Node
-SEARCH:
-FILENAME:--test.txt
-END;
+SEARCH:\n
+FILENAME:--test.txt\n
+END;\n
 
 
-From Node / to Client:
-SEARCH:
-FILEPATH:--NameOfServer:test.txt
-END;
+From Node / to Client:\n
+SEARCH:\n
+FILEPATH:--NameOfServer:test.txt\n
+END;\n
 ```
 ---
