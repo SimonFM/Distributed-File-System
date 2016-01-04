@@ -30,20 +30,6 @@ class FileManager {
     filePaths = fileName :: filePaths
   }
 
-//  // Returns the actual file and not the contents
-//  def getFile(fileName : String): File ={
-//    val file = new File(fileName)
-//    if( file.exists() && !filePaths.contains(fileName) ) {
-//      filePaths = fileName :: filePaths
-//      return file
-//    }
-//    else if (file && !currentFileAccess.contains()){
-//
-//    }
-//    else return null
-//
-//  }
-
   // updates the content in a file
   def updateFile(fileName : String, newFile: Array[Byte]): Unit ={
     val oldFile = new File(fileName)

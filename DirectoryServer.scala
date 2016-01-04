@@ -270,12 +270,9 @@ object DirectoryServer {
           // wait for an ACK
           temp = nodeInVal.readLine()
 
-          if (temp == "SUCCESS;") {
-            println("SUCCESS-RELEASE")
-          }
-          else {
-            println("FAILURE-RELEASE")
-          }
+          if (temp == "SUCCESS;") println("SUCCESS-RELEASE")
+          else println("FAILURE-RELEASE")
+
         }
         else {
           println("FAILURE-RELEASE")
@@ -301,8 +298,7 @@ object DirectoryServer {
             println(temp)
             contents = contents ++ List(temp)
           }
-//          else if( response == "CONTENTS:--")
-//            contents = contents ++ List("")
+          else if( response == "CONTENTS:--") contents = contents ++ List("\r \n")
 
         }
         fileMap.addToMap(fileName)
@@ -314,10 +310,13 @@ object DirectoryServer {
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
           val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
           lazy val nodeInVal = new BufferedReader(nodeInStream)
+
+
+          // Tell the node we want to write to a file
           nodeOut.println("WRITE_FILE:")
           nodeOut.println("FILE_NAME:--" + fileName)
-          for(s <- contents)
-            nodeOut.println("CONTENTS:--" + s)
+
+          for(s <- contents) nodeOut.println("CONTENTS:--" + s)
 
           nodeOut.println("END;")
           nodeOut.flush()
@@ -341,24 +340,33 @@ object DirectoryServer {
           println("Telling nodes to update from my Cache...")
           println(contents)
           cache.writeToFile(fileName, contents)
+          // tell the node we want to write the file
           val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
           val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
           lazy val nodeInVal = new BufferedReader(nodeInStream)
+
+
+          // Tell the node we want to write to a file
           nodeOut.println("WRITE_FILE:")
           nodeOut.println("FILE_NAME:--" + fileName)
-          nodeOut.println("CONTENTS:--" + contents)
+
+          for(s <- contents) nodeOut.println("CONTENTS:--" + s)
+
           nodeOut.println("END;")
           nodeOut.flush()
-          println("Sent the File Request from Cache...")
+          println("Sent the File Request")
+
           // ACK back
           temp = nodeInVal.readLine()
 
           if (temp == "SUCCESS;"){
+            cache.addToCache(new File(fileName) )
+            cache.writeToFile(fileName,contents)
             out.println("SAVED: "+fileName)
             out.println("END;")
             out.flush()
-            println("Nodes Updated their copy")
+            println("File Successfully written")
           }
           else println("FAILURE-WRITE")
         }
@@ -406,9 +414,8 @@ object DirectoryServer {
                   println(temp)
                   contents = contents ++ List(temp)
                 }
-                else if( response == "CONTENTS:--")
-                  contents = contents ++ List("")
-
+                else if( response == "CONTENTS:--") contents = contents ++ List("")
+                else println("ERROR")
               }
               //Now send the contents back to the user
               out.println("FILE_CONTENTS:")

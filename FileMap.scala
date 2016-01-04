@@ -1,6 +1,5 @@
 
 class FileMap {
-
   var fileToPortReference : Map[String, Int] = Map()
   val defaultPort = 8080
   val maxPort = 8082
@@ -11,17 +10,14 @@ class FileMap {
       fileToPortReference = Map(file -> currentPort) ++ fileToPortReference
       updatePortPointer()
     }
-    else{
-      println("We already have a file with that name")
-    }
+    else println("We already have a file with that name")
   }
 
   def removeFromMap(file : String): Unit ={
     var newMap : Map[String, Int] = Map()
     for(value <- fileToPortReference){
-      if(value._1 != file){ // if the keys arent the same
+      if(value._1 != file) // if the keys aren't the same
         newMap = Map(value._1 -> value._2) ++ newMap
-      }
     }
     fileToPortReference = newMap
   }

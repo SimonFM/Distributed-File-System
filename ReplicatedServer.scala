@@ -2,8 +2,6 @@ import java.io._
 import java.net.{ServerSocket, Socket, SocketException}
 import java.util.concurrent.Executors
 
-import scala.io.Source
-
 object ReplicatedNode {
   /**
    * A class that handles the work for the server. It takes in a connection
@@ -25,11 +23,13 @@ object ReplicatedNode {
 
     var NODE_NAME = ""
     var folder = ""
+    var LOCATION = ""
 
 
     // Creates a folder called whatever the sever is called
     def makeDirectory(folderName : String): Unit ={
       val theDir = new File(folderName)
+      LOCATION = folderName
       if(!theDir.exists()){
         try {
           theDir.mkdirs()
@@ -55,7 +55,7 @@ object ReplicatedNode {
      */
     def run(): Unit = {
       try {
-        makeDirectory("Replicated")
+        makeDirectory("Replicated"+PORT)
         println("Nodes is running on port: " + portNumber)
         while (!serverSocket.isClosed && noKill) {
           try {
@@ -83,10 +83,8 @@ object ReplicatedNode {
       val outVal = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
       val inStream = new InputStreamReader(socket.getInputStream)
       lazy val inVal = new BufferedReader(inStream)
-      var recv = ""
-      // variable to store messages.
+      var recv = ""// variable to store messages.
       var count = 0
-
 
       /**
        * This is where the work of the worker is done, it checks the
@@ -104,11 +102,7 @@ object ReplicatedNode {
               recv = inVal.readLine()
               println("Received: " + recv)
               if (recv == "WRITE_FILE:") handleWRITE_FILE()
-          //    else if (recv == "GET_FILE:") handleGET_FILE()
-          //    else if (recv == "GET_FILE_TIME:" ) handleGET_FILE_TIME()
               else if (recv == "DELETE_FILE:" ) handleDELETE()
-          //    else if (recv  == "RELEASE:") handleRELEASE_FILE()
-          //    else if (recv  == "SEARCH:") handleSEARCH()
               else if (recv == "") print("Nothing")
               else {println("Hello")}
             } //if
@@ -141,8 +135,9 @@ object ReplicatedNode {
       def handleDELETE(): Unit ={
         val fileName = inVal.readLine().split("--")(1)
         inVal.readLine()// this should be END;
+        // if the file isn't being written to and isn't locked, then delte
         if(fileManager.containsFile(fileName) && !fileManager.isFileBeingWrittenTo(fileName) ){
-          val file = new File("Node-"+PORT+"/"+fileName)
+          val file = new File(LOCATION+"/"+fileName)
 
           outVal.println("DELETE_FILE:")
           val result = file.delete()
@@ -164,10 +159,7 @@ object ReplicatedNode {
 
       // Tells the node it is getting a write request
       def handleWRITE_FILE(): Unit = {
-
         val fileName = inVal.readLine().split("--")(1)
-        println(fileName)
-
         var temp = ""
         var contents = List[String]()
         var response = ""
@@ -179,26 +171,24 @@ object ReplicatedNode {
             println(temp)
             contents = contents ++ List(temp)
           }
-          else if( response == "CONTENTS:--")
-            contents = contents ++ List("")
-
+          else if( response == "CONTENTS:--") contents = contents ++ List("\r \n")
+          else println("ERROR")
         }
 
         val output = socket.getOutputStream
         if(!fileManager.isFileBeingWrittenTo(fileName)) {
-          val writer = new PrintWriter(new File("Replicated"+"/"+fileName))
+          val writer = new PrintWriter(new File(LOCATION+"/"+fileName))
           for (l <- contents) {
             println("Contents: "+l)
             if("" != l){
               writer.write(l+"\n")
               writer.flush()
             }
-
           }
-          writer.close()
+          writer.close() //  close writing to the file
+          // send back a success message
           outVal.println("SUCCESS;")
           outVal.flush()
-          println("Sent SUCCESS;")
           fileManager.releaseFile(fileName)
         }
         else{
@@ -209,93 +199,11 @@ object ReplicatedNode {
         println("###################################################################")
       }
 
-      // Gets the contents of a file
-      def handleGET_FILE(): Unit = {
-
-        val split = recv.split(" ")
-        var temp = inVal.readLine()
-        var temp1 = temp.split("--")
-        val fileName = temp1(1)
-        println(temp)
-
-        // this should be END;
-        temp = inVal.readLine()
-        println(temp)
-
-        if(!fileManager.isFileBeingWrittenTo(fileName)){
-          val theFile = new File("Replicated"+"/"+fileName)
-          val fileInput = new FileInputStream(theFile)
-          println("Got a File Request " + fileName)
-
-          val lines = Source.fromFile(fileName).getLines().toList
-
-          outVal.println("FILE_CONTENTS:")
-          for(l <- lines) outVal.println("CONTENTS:--" + l)
-          outVal.println("END;")
-          outVal.flush()
-          println("Sent back File")
-
-        }
-        else{
-          outVal.println("ERROR - 99")
-          outVal.flush()
-          println("Sent The Error")
-        }
-        println("###################################################################")
-      }
-
-      // Tells the node that someone has released access
-      def handleRELEASE_FILE(): Unit ={
-        var temp = inVal.readLine()
-        var temp1 = temp.split("--")
-        val fileName = temp1(1) // The file name
-        temp = inVal.readLine() // this should be END;
-
-        fileManager.releaseFile(fileName)
-
-        outVal.println("SUCCESS;")
-        outVal.flush()
-        println("File was released")
-        println("###################################################################")
-
-      }
-
-      // performs LS in the Node
-      def handleSEARCH(): Unit ={
-        val fileName = inVal.readLine().split("--")(1)
-        inVal.readLine()// this should be END;
-
-        if(fileManager.containsFile(fileName)){
-          outVal.println("SEARCH:")
-          outVal.println("FILEPATH:--Server"+portNumber+":"+fileName)
-          outVal.println("END;")
-          outVal.flush()
-          println("Sent File Location back: Server"+portNumber+":"+fileName )
-        }
-        else{
-          outVal.println("NOT_HERE:")
-          outVal.flush()
-          println("No Such File; Server"+portNumber+":"+fileName)
-        }
-        println("###################################################################")
-      }
-
-      // prints a message to all sockets
-      def handleMessage(message: String): Unit = {
-        for (s <- sockets) {
-          val outputStream = s.getOutputStream
-          val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8")))
-          out.println(message)
-          out.flush()
-        }
-      }
-
-      // This function kills the server
+      // This function kills the server, from lab 3... or was it 4
       def shutdownServer(): Unit = {
         try {
           if (serverSocket != null) {
             noKill = false
-            handleMessage("KILL_SERVICE")
             threadPool.shutdownNow
             serverSocket.close()
           }
@@ -312,7 +220,6 @@ object ReplicatedNode {
 
   // Main method that runs the program
   def main(args: Array[String]) {
-
     val input = readLine("Please Enter in the port to start on: ")
     val node = new ReplicatedNodeServer(input.toInt)
     node.NODE_NAME = "NODE:"+input

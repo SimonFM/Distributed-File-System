@@ -105,7 +105,6 @@ object Client {
         var response = nodeInVal.readLine()
         println(response)
         if(response.contains("FILE_CONTENTS:")){
-          // println(response)
           var contents = List[String]()
           response = ""
           var temp = ""

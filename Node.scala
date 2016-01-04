@@ -200,17 +200,22 @@ object Node {
         //get the contents
         while(response != "END;"){
           response = inVal.readLine()
+          // if the current line is not END & is not an empty line
+          // then add it to the current file
           if(response != "END;" && response != "CONTENTS:--"){
             temp = response.split("--")(1)
             println(temp)
             contents = contents ++ List(temp)
           }
-          else if( response == "CONTENTS:--")  contents = contents ++ List("")
+            // else if it is a empty line, add in an empty line to the file
+          else if( response == "CONTENTS:--")  contents = contents ++ List("\r \n")
         }
         val file = new File("Node-"+PORT+"/"+fileName)
         if(file.exists()){
           val output = socket.getOutputStream
+          // if the file isn't locked already
           if(!fileManager.isFileBeingWrittenTo(fileName)) {
+            // obtain the lock and then release
             fileManager.lock(fileName)
             fileManager.addFile(fileName)
             val writer = new PrintWriter(file)
@@ -227,9 +232,7 @@ object Node {
             outVal.flush()
             fileManager.releaseFile(fileName)
             println("Sent SAVED;")
-            //perform replication
-            writeToNodes(fileName,contents)
-
+            writeToNodes(fileName,contents) //perform replication
           }
           else{
             outVal.println("FAILURE;")
@@ -237,7 +240,7 @@ object Node {
             println("FAILURE;" )
           }
         }
-        else{ // write
+        else{ // The file does'nt exist and we need to make it
           fileManager.lock(fileName)
           fileManager.addFile(fileName)
           val writer = new PrintWriter(file)
@@ -254,8 +257,7 @@ object Node {
           outVal.flush()
           fileManager.releaseFile(fileName)
           println("Sent SAVED;")
-          //perform replication
-          writeToNodes(fileName,contents)
+          writeToNodes(fileName,contents)//perform replication
 
         }
         println("###################################################################")
