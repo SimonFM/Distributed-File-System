@@ -34,6 +34,10 @@ Features I chose to implement were:
 
 5. Replication 
   - All this part of the system does is perform immediate updates from the FileNodes, so all they contain is a back up of the last write performed.
+  
+
+#### Note
+Initially my DFS was designed in such a way that it resulted in a centralised implementation where the Directory server was the middle man for the File Servers and the clients. I had a cache inside of the Directory Server, this proved to be a bottleneck when I was testing my system, so the code for the cache and the flow is still there, only it does not get executed anymore.
 
 ##Flow Of Operation
 1. Client.connect(Directory Server) 
