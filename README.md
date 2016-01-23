@@ -31,8 +31,8 @@ Features I chose to implement were:
   - Initially I had my caching on the Directory Server, it is still there but It is not implemented by any service. My design in this was that the directory server could hold the last X number of files accessd so a user would not have to constantly go to the file servers every time they wanted to read / write a file. This then ended up being a bottle neck as multiple users accessing the same file(s) would end up reading and writing in a inconsisitent pattern. It also breaks up the idea of a distributed system, so i scrapped the idea.
   - Caching is done locally for each client, inside a folder called (cache) and that is where the files are written to and from. When a read is performed (or a write) the client asks the node it obtained the file from for the latest version (this is in a form of a timestamp of last modified) and if the client's is in anyway different, their version is then updated.
 
-5. Replication
-  All this part of the system does is perform immediate updates from the FileNodes, so all they contain is a back up of the last write performed.
+5. Replication 
+  - All this part of the system does is perform immediate updates from the FileNodes, so all they contain is a back up of the last write performed.
 
 ##Flow Of Operation
 1. Client.connect(Directory Server) 
