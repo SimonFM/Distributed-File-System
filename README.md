@@ -37,7 +37,10 @@ Features I chose to implement were:
   
 
 #### Note
-Initially my DFS was designed in such a way that it resulted in a centralised implementation where the Directory server was the middle man for the File Servers and the clients. I had a cache inside of the Directory Server, this proved to be a bottleneck when I was testing my system, so the code for the cache and the flow is still there, only it does not get executed anymore.
+- Initially my DFS was designed in such a way that it resulted in a centralised implementation where the Directory server was the middle man for the File Servers and the clients. I had a cache inside of the Directory Server, this proved to be a bottleneck when I was testing my system, so the code for the cache and the flow is still there, only it does not get executed anymore.
+
+- I was not able to gain access to OpenNebula, so I all this runs on the local host.
+- 
 
 ##Flow Of Operation
 1. Client.connect(Directory Server) 
