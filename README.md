@@ -30,7 +30,7 @@ Features I chose to implement were:
   - A client is then also able to perform a lookup on a file. This returns where the file is saved (if it is saved at all).
 3. Locking System
   - It is a basic locking system, when the user applies a WRITE, it first looks to see if anyone has a lock on that file (ie if they're writing to that file) and it will send a message back to the user saying that someone else has a lock on the file, otherwise if there isn't a lock the lock is given to the user and then their write is applied and they release the lock.
-  - This is all done inside of the file servers themselves, not on a separate locking server.
+  - This is all done inside of the file servers themselves, not on a separate locking server. My logic for this would be that the locking server would cause a bottleneck in the architecture of the design, if all the nodes clients are waiting for access on a file, then the locking server would act as the middle man for accesses the file on the system. I felt that doing this on the file server itself to be easier and also more cost effective. It also reduces the amount of traffic in the system too.
 
 4. Caching
   - Initially I had my caching on the Directory Server, it is still there but It is not implemented by any service. My design in this was that the directory server could hold the last X number of files accessd so a user would not have to constantly go to the file servers every time they wanted to read / write a file. This then ended up being a bottle neck as multiple users accessing the same file(s) would end up reading and writing in a inconsisitent pattern. It also breaks up the idea of a distributed system, so i scrapped the idea.
