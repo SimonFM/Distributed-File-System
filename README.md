@@ -1,3 +1,5 @@
+Simon Markham - ac7ce4082772456e04ad6d80cceff8ddc274a78fd3dc1f28fd05aafdc4665e1b
+
 # Distributed File System
 A distributed File System written in Scala. It currently only works for .txt files, but it could easily be modified in the future should someone wish to do so.
 ##Running DFS
