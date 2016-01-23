@@ -35,7 +35,7 @@ Features I chose to implement were:
   - Caching is done locally for each client, inside a folder called (cache) and that is where the files are written to and from. When a read is performed (or a write) the client asks the node it obtained the file from for the latest version (this is in a form of a timestamp of last modified) and if the client's is in anyway different, their version is then updated.
 
 5. Replication 
-  - All this part of the system does is perform immediate updates from the FileNodes, so all they contain is a back up of the last write performed.
+  - All this part of the system does is perform immediate updates from the FileNodes, so all they contain is a back up of the last write performed. There are no elections or slave-master implementations of replication.
   
 
 #### Note
