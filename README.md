@@ -105,7 +105,7 @@ NOPE;\n
 
 ###Search for File
 ```javascript
-To Proxy / Node
+To Directory Server / Node
 SEARCH:\n
 FILENAME:--test.txt\n
 END;\n
