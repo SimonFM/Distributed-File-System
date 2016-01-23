@@ -5,6 +5,7 @@ class FileMap {
   val maxPort = 8082
   var currentPort = 8080
 
+  // add to the map.
   def addToMap(file : String): Unit ={
     if(!fileToPortReference.contains(file)){
       fileToPortReference = Map(file -> currentPort) ++ fileToPortReference
@@ -13,6 +14,7 @@ class FileMap {
     else println("We already have a file with that name")
   }
 
+  // delete the references
   def removeFromMap(file : String): Unit ={
     var newMap : Map[String, Int] = Map()
     for(value <- fileToPortReference){
@@ -27,11 +29,12 @@ class FileMap {
     else currentPort = currentPort + 1
   }
 
-
+  // checks if the file exists
   def fileExists(file : String): Boolean ={
     return fileToPortReference.contains(file)
   }
 
+  // returns the associated port with the file
   def getPort(file : String): Int ={
     if(fileToPortReference.contains(file)){
       return fileToPortReference(file)

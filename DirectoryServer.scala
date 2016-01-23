@@ -102,19 +102,22 @@ object DirectoryServer {
               println("Waiting.... " + myConnection)
               recv = inVal.readLine()
               println("Received: " + recv)
-              if      (recv.contains("KILL_SERVICE")) handleKILL()
-              else if (recv.contains("HELO ")) handleHELO()
-              else if (recv == "SEARCH:" ) handleSEARCH()
-              else if (recv == "GET_FILE_TIME:" ) handGET_FILE_TIME()
-              else if (recv == "LS:" ) handleSEARCH()
-              else if (recv == "DELETE_FILE:" ) handleDELETE()
-              else if (recv == "GET_FILE:") handleGET_FILE()
-              else if (recv == "WRITE_FILE:") handleWRITE_FILE()
-              else if (recv == "RELEASE:") handleRELEASE_FILE()
-              else if (recv == "") println("Nothing")
-              else println("Hello")
 
-            } //if
+              if (recv.contains("KILL_SERVICE")) handleKILL()
+              else if(recv.contains("HELO ")) handleHELO()
+              else
+              recv match{
+                case "SEARCH:" => handleSEARCH()
+                case "GET_FILE_TIME:" => handGET_FILE_TIME()
+                case "LS:" => handleSEARCH()
+                case "DELETE_FILE:" => handleDELETE()
+                case "GET_FILE:" => handleGET_FILE()
+                case "WRITE_FILE:" => handleWRITE_FILE()
+                case "RELEASE:" => handleRELEASE_FILE()
+                case "" => println("Nothing")
+                case _ => println("Error")
+              }
+             } //if
           } // end of while
         } catch {
           case s: SocketException => println("User pulled the plug")
@@ -126,15 +129,9 @@ object DirectoryServer {
         var temp = inVal.readLine()
         val fileName = temp.split("--")(1) // The file name
         inVal.readLine() // this should be END;
+
+        // if the file exists on the server, we can do some operations
         if (fileMap.fileExists(fileName)){
-          if (cache.isFileInCache(fileName)){
-            val file = new File(fileName)
-            out.println("GET_FILE_TIME:")
-            out.println("TIME:--" + file.lastModified())
-            out.println("END;")
-            out.flush() // send the request to the server
-          }
-          else {
             // tell the node we want the timestamp of the file
             val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
             val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
@@ -165,15 +162,22 @@ object DirectoryServer {
               out.println("END;")
               out.flush()
             }
-          }
+        }
+        else{
+          out.println("ERROR - 99")
+          out.println("END;")
+          out.flush()
+          println("No Such File;")
         }
       }
 
       // Deletes a file
       def handleDELETE(): Unit ={
-        var temp = inVal.readLine()
+        val temp = inVal.readLine()
         val fileName = temp.split("--")(1) // The file name
         inVal.readLine() // this should be END;
+
+        // If the file exists, we can delete it.
         if(fileMap.fileExists(fileName)){
           val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
@@ -223,7 +227,7 @@ object DirectoryServer {
 
           // wait for an ACK
           if( nodeInVal.readLine() == "SEARCH:"){
-            val fileLocation = nodeInVal.readLine().split("--")(1)
+            nodeInVal.readLine().split("--")(1)
             nodeInVal.readLine()
             out.println("SEARCH:")
             out.println("IP:--" + HOST)
@@ -246,7 +250,7 @@ object DirectoryServer {
           out.println("PORT:--" + fileMap.getPort(fileName))
           out.println("END;")
           out.flush()
-          println("New File;")
+          println("New File; " + fileMap.getPort(fileName))
         }
         println("###################################################################")
       }
@@ -257,6 +261,7 @@ object DirectoryServer {
         val fileName = temp.split("--")(1) // The file name
         temp = inVal.readLine() // this should be END;
         if(fileMap.fileExists(fileName)){
+
           val nodeSocket = new Socket(HOST, fileMap.getPort(fileName))
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
           val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
@@ -269,14 +274,11 @@ object DirectoryServer {
 
           // wait for an ACK
           temp = nodeInVal.readLine()
-
           if (temp == "SUCCESS;") println("SUCCESS-RELEASE")
           else println("FAILURE-RELEASE")
+        }
+        else println("FAILURE-RELEASE")
 
-        }
-        else {
-          println("FAILURE-RELEASE")
-        }
         println("###################################################################")
       }
 
@@ -286,7 +288,7 @@ object DirectoryServer {
         var temp = inVal.readLine()
         println(temp)
 
-        var temp1 = temp.split("--")
+        val temp1 = temp.split("--")
         val fileName = temp1(1)
         var contents = List[String]()
         var response = ""
@@ -298,7 +300,7 @@ object DirectoryServer {
             println(temp)
             contents = contents ++ List(temp)
           }
-          else if( response == "CONTENTS:--") contents = contents ++ List("\r \n")
+          else if( response == "CONTENTS:--") contents = contents ++ List("\r\n")
 
         }
         fileMap.addToMap(fileName)
@@ -334,7 +336,6 @@ object DirectoryServer {
             println("File Successfully written")
           }
           else println("FAILURE-WRITE")
-
         }
         else{
           println("Telling nodes to update from my Cache...")
@@ -345,7 +346,6 @@ object DirectoryServer {
           val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
           val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
           lazy val nodeInVal = new BufferedReader(nodeInStream)
-
 
           // Tell the node we want to write to a file
           nodeOut.println("WRITE_FILE:")
@@ -403,10 +403,9 @@ object DirectoryServer {
             println(temp)
             if (temp != "ERROR - 99") {
               // gather up the contents
-              ///val contents = nodeInVal.readLine().split("--")(1)
-
               var contents = List[String]()
               var response = ""
+
               while(response != "END;"){
                 response = inVal.readLine()
                 if(response != "END;" && response != "CONTENTS:--"){
@@ -430,6 +429,7 @@ object DirectoryServer {
               println("ERROR - Cant get file, its in use")
             }
           }
+          // The file is in the cache, so we can write back to the client.
           else{
             val theFile = cache.getFile(fileName)
             val fileInput = new FileInputStream(theFile)

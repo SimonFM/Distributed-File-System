@@ -31,15 +31,13 @@ object ReplicatedNode {
       val theDir = new File(folderName)
       LOCATION = folderName
       if(!theDir.exists()){
-        try {
-          theDir.mkdirs()
-        }catch{
+        try {theDir.mkdirs()}
+        catch{
           case secE: SecurityException  => println("Sorry you're not allowed to make folders")
         }
         println("Made a new Directory")
       }
     }
-
 
     // Creates folder called Cache
     def makeCacheFolder(): Unit ={
@@ -101,10 +99,13 @@ object ReplicatedNode {
               println("Waiting.... ")
               recv = inVal.readLine()
               println("Received: " + recv)
-              if (recv == "WRITE_FILE:") handleWRITE_FILE()
-              else if (recv == "DELETE_FILE:" ) handleDELETE()
-              else if (recv == "") print("Nothing")
-              else {println("Hello")}
+
+              recv match{
+                case "WRITE_FILE:" => handleWRITE_FILE()
+                case "DELETE_FILE:" =>  handleDELETE()
+                case "" => println("Nothing")
+                case _ => println("Error State")
+              }
             } //if
           } // end of while
         } catch {
@@ -138,7 +139,6 @@ object ReplicatedNode {
         // if the file isn't being written to and isn't locked, then delte
         if(fileManager.containsFile(fileName) && !fileManager.isFileBeingWrittenTo(fileName) ){
           val file = new File(LOCATION+"/"+fileName)
-
           outVal.println("DELETE_FILE:")
           val result = file.delete()
           if(result) outVal.println("RESULT:--SUCCESS")
@@ -166,13 +166,17 @@ object ReplicatedNode {
         //get the contents
         while(response != "END;"){
           response = inVal.readLine()
+          println(response)
           if(response != "END;" && response != "CONTENTS:--"){
-            temp = response.split("--")(1)
-            println(temp)
-            contents = contents ++ List(temp)
+            val reponseSplit = response.split("--")
+            if(reponseSplit.size > 1){
+              temp = reponseSplit(1)
+              println(temp)
+              contents = contents ++ List(temp)
+            }
           }
-          else if( response == "CONTENTS:--") contents = contents ++ List("\r \n")
-          else println("ERROR")
+          else if( response == "CONTENTS:--") contents = contents ++ List("\n")
+          else println("")
         }
 
         val output = socket.getOutputStream
@@ -181,7 +185,7 @@ object ReplicatedNode {
           for (l <- contents) {
             println("Contents: "+l)
             if("" != l){
-              writer.write(l+"\n")
+              writer.write(l + "\n")
               writer.flush()
             }
           }

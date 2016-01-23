@@ -38,7 +38,6 @@ object Node {
       }
     }
 
-
     def makeCacheFolder(): Unit ={
       makeDirectory(NODE_NAME + "/" + "cache")
       folder = NODE_NAME + "/" + "cache"
@@ -100,14 +99,18 @@ object Node {
               println("Waiting.... ")
               recv = inVal.readLine()
               println("Received: " + recv)
-              if (recv == "WRITE_FILE:") handleWRITE_FILE()
-              else if (recv == "GET_FILE:") handleGET_FILE()
-              else if (recv == "GET_FILE_TIME:" ) handleGET_FILE_TIME()
-              else if (recv == "DELETE_FILE:" ) handleDELETE()
-              else if (recv  == "RELEASE:") handleRELEASE_FILE()
-              else if (recv  == "SEARCH:") handleSEARCH()
-              else if (recv == "") print("Nothing")
-              else {println("Hello")}
+
+              recv match{
+                case "WRITE_FILE:" => handleWRITE_FILE()
+                case "GET_FILE:" => handleGET_FILE()
+                case "GET_FILE_TIME:" => handleGET_FILE_TIME()
+                case "DELETE_FILE:" => handleDELETE()
+                case "RELEASE:" => handleRELEASE_FILE()
+                case "SEARCH:" => handleSEARCH()
+                case "" => println("Nothing was received")
+                case _ => println("Invalid State")
+
+              }
             } //if
           } // end of while
         } catch {
@@ -159,6 +162,9 @@ object Node {
         println("###################################################################")
       }
 
+      // Tells the replicators that they are being written to
+      // and the data that was just written to this node is also written to
+      // the replicator nodes too.
       def writeToNodes(fileName : String, contents : List[String] ): Unit ={
         var port = 9000
         while(port < 9003){
@@ -208,7 +214,7 @@ object Node {
             contents = contents ++ List(temp)
           }
             // else if it is a empty line, add in an empty line to the file
-          else if( response == "CONTENTS:--")  contents = contents ++ List("\r \n")
+          else if( response == "CONTENTS:--")  contents = contents ++ List("\n")
         }
         val file = new File("Node-"+PORT+"/"+fileName)
         if(file.exists()){
@@ -287,14 +293,15 @@ object Node {
             outVal.println("END;")
             outVal.flush()
             println("Sent back File")
-
           }
+          // It is under control of someone else.
           else{
             outVal.println("ERROR-99")
             outVal.flush()
             println("Sent The Error")
           }
         }
+        // Not in the system
         else{
           outVal.println("ERROR-99")
           outVal.flush()

@@ -29,7 +29,7 @@ class Cache {
     else null
   }
 
-  //
+  // checks to see if a file is inside the cache.
   def isFileInCache(nFile: String): Boolean ={
     if(new File(nFile).exists()){
       println("Found the file " + nFile + " in the cache")
@@ -39,7 +39,7 @@ class Cache {
     return false
   }
 
-  //
+  // writes to the file inside of the cache.
   def writeToFile(nFile : String, newContents : List[String]): Unit ={
     val file = getFile(folder+nFile)
     val writer = new PrintWriter(new File(nFile))

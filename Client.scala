@@ -20,9 +20,9 @@ object Client {
   var clientName = ""
   val CACHE = new Cache
 
-  // SEARCH:
-  // FILENAME:--test.txt
-  // END;
+  // This functions asks the directory server where the desired file is
+  // if it cannot be found then it returns an error that says the file
+  // could not be found.
   def whereIs(fileName:String): String ={
     directoryOut.println("SEARCH:")
     directoryOut.println("FILEPATH:--"+fileName)
@@ -45,11 +45,14 @@ object Client {
     if(!file.exists()) println("Sorry '" + path + "' could not be found")
     else{
       val result = whereIs(fileName)
+      // if the file exists on the server then we can begin writing to it.
+      // this will overwrite any values held on the File Servers.
       if(result != "NOPE"){
         val IP = result.split("--")(0)
         val PORT = result.split("--")(1)
 
         // connect to the designated node
+        println(PORT.toInt)
         val nodeSocket = new Socket(IP, PORT.toInt)
         val nodeOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(nodeSocket.getOutputStream, "UTF-8")))
         val nodeInStream = new InputStreamReader(nodeSocket.getInputStream)
@@ -59,7 +62,9 @@ object Client {
 
         fileInput.read(contents)
         println("Sending Request to write")
-        //
+
+        // convert the lines to a list, so we can easily iterate through the list and
+        // send them to the file systems.
         val lines = Source.fromFile(path).getLines().toList
         nodeOut.println("WRITE_FILE:")
         nodeOut.println("FILE_NAME:--"+fileName)
@@ -67,27 +72,32 @@ object Client {
         nodeOut.println("END;")
         nodeOut.flush() // send the request to the server
         println("Waiting for write ACK")
+
         // Wait for response
         var response = nodeInVal.readLine()
         println(response)
+
+        // If the node was saved successfully then we can tell the
+        // user it was saved
         if(response.contains("SAVED:")){
           nodeInVal.readLine() // END;
           println("Saved "+fileName)
-          //releaseFile(fileName)
         }
-        else{
-          println("An Error occured with "+fileName)
-        }
+        // else tell the user something went wrong.
+        else println("An Error occurred with "+fileName)
       }
       else println("That file could not be found")
     }
-
   }
 
   // Reads a desired File from the server
   def readFile(fileName : String): Unit ={
     val result = whereIs(fileName)
     if(result != "NOPE"){
+
+      // if the file isn't in the cache, then we have to do things.
+      // we need to the update the file in the cache by requesting it from
+      // the server
       if(!CACHE.isFileInCache(fileName)){
         val IP = result.split("--")(0)
         val PORT = result.split("--")(1)
@@ -115,14 +125,11 @@ object Client {
               println(temp)
               contents = contents ++ List(temp)
             }
-            else if( response == "CONTENTS:--")
-              contents = contents ++ List("")
-
+            else if( response == "CONTENTS:--")contents = contents ++ List("\n")
           }
           println("Got the file "+fileName)
 
           val file = new File(clientName + "/" + "cache" + "/" + fileName)
-
           val writer = new PrintWriter(file)
           for (l <- contents) {
             println("Contents: "+l)
@@ -130,16 +137,13 @@ object Client {
               writer.write(l+"\n")
               writer.flush()
             }
-
           }
           writer.close()
           println("Wrote to the file")
           CACHE.addToCache(file)
 
         }
-        else{
-          println("An Error occurred with "+fileName)
-        }
+        else println("An Error occurred with "+fileName)
       }
       // it is in the cache, we need to ask the server if its the
       // latest version, if its not, then we need to update our copy
@@ -199,7 +203,6 @@ object Client {
       }
     }
     else println("SERVER DOES NOT HAVE A FILE CALLED: "+fileName)
-
   }
 
   // Deletes a desired File from the server
@@ -237,6 +240,7 @@ object Client {
     directorySocket.close()
   }
 
+  // connect to the directory server.
   def connect(): Unit ={
     directorySocket = new Socket(HOSTNAME, PORT)
     inStream  = new InputStreamReader(directorySocket.getInputStream)
@@ -251,6 +255,7 @@ object Client {
     CACHE.folder = clientName + "/" + "cache"
   }
 
+  // its a main... it runs the Client...
   def main(args: Array[String]): Unit ={
     clientName = readLine("Please enter your username: ")
     makeDirectory(clientName)
@@ -263,7 +268,7 @@ object Client {
       println("(9) - Exit")
       choice = readLine("Please Enter a choice (by number): ").toInt
 
-      // do the choice
+      // do the choices
       choice match{
         case WRITE =>
           connect()
@@ -283,5 +288,4 @@ object Client {
       }
     }while(choice != EXIT)
   }
-
 }

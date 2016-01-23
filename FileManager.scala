@@ -38,6 +38,8 @@ class FileManager {
     fileStream.write(newFile)
     fileStream.close()
   }
+
+  // locks access to a specified file.
   def lock(fileName : String): Unit ={
     println("Locking the file: "+fileName)
     println("OldList1: " + currentFileAccess)
@@ -65,6 +67,7 @@ class FileManager {
     return filePaths
   }
 
+  // it makes a directory with a given name.
   def makeDirectory(folderName : String): Unit ={
     val theDir = new File(folderName);
     if(!theDir.exists()){
