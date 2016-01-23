@@ -21,6 +21,7 @@ Features I chose to implement were:
 1. File System
   - All my files are stored on File Servers called Nodes and also on my replicated Nodes.
   - They are able to perfrom READ, WRITE and DELETE operations.
+  - The operations are not done automatically when a user closes a file. They need to specify which command they want to perfom via a command line terminal which can be seen the client side
 2. Directory Service 
   - Tells the client which node the file is located on
   - Each unique file is mapped to a different file server (via round robin, this isn't the most ideal solution but it does ensure fairness as each node will be garunteed a file). Different files are distinguished by the their file name. So each file needs to have a unique name, this also means that files with the same name will not be on the same server.
